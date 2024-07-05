@@ -87,68 +87,6 @@ class Player {   //объект игрока, хранит данные о нё�
 }
 
 
-
-class Enemy {   //объект врага, хранит данные о нём
-    constructor(x, y, width, height) {   //нужен для создания врага с заданными свойствами
-        this.position = {
-            x: x,
-            y: y,
-        }
-
-        this.velocity = {   //объект, хранящий ускорение врага в двух осях
-            x: 0,
-            y: 3
-        }
-
-        this.width = width,
-        this.height = height,
-        this.health = 90; //здоровье врага
-    }
-
-    draw() {    //отрисовка врага
-        c.fillStyle = 'purple';
-        c.fillRect(this.position.x, this.position.y, this.width, this.height);
-        //ЗДОРОВЬЕ ВРАГА (линия)
-        c.fillStyle='yellow';
-        c.fillRect(this.position.x, this.position.y - 25, this.width, 10);
-
-        c.fillStyle='brown';
-        c.fillRect(this.position.x, this.position.y - 25, this.width * this.health / 90, 10);
-    }
-
-
-
-    update() {   //обновление местонахождения врага
-        this.position.y += this.velocity.y;
-        this.position.x += this.velocity.x;
-        this.draw();
-        
-
-        if (this.position.y + this.height + this.velocity.y < canvas.height) {
-            this.velocity.y += gravity;
-        }
-        else {
-            this.isGameOver = true; //поднятие флага проигрыша, если игрок упал в яму и выпал за границы экрана
-        }
-
-    }
-
-    attack(){ //метод атаки посохом
-        this.isAttacking = true;
-        setTimeout(()=> {
-            this.isAttacking = false;
-        }, 100);
-    }
-    magic(){ //метод атаки шарами
-        this.isBallAttack = true;
-        setTimeout(()=> {
-            this.isBallAttack = false;
-        }, 100);
-    }
-}
-
-
-
 class Enemy {   //объект врага, хранит данные о нём
     constructor(x, y, width, height) {   //нужен для создания врага с заданными свойствами
         this.position = {
@@ -216,6 +154,7 @@ class Platform {    //класс платформы
 
 let platforms = [];
 let player;
+let enemies = [];
 
 function init(){    //функция инициализации (расставляет все объекты)
     platforms = [new Platform(270, 400, 300, 50), new Platform(0, 670, 300, 50),
@@ -223,9 +162,9 @@ function init(){    //функция инициализации (расстав�
     ]
     
     player = 0;
-    player = new Player(200, 480, 75, 150);
+    player = new Player(200, 400, 75, 150);
 
-    enemy= new Enemy(600, 200, 80, 150);
+    enemies= [new Enemy(500, 200, 80, 150)];
 }
 
 init();
@@ -250,8 +189,9 @@ function animate() {
         platform.draw();
     })
     player.update();
-    enemy.update();
-
+    enemies.forEach((enemy) => {
+        enemy.update();
+    })
     if (keys.right.pressed) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
         player.velocity.x = 5;
     }
@@ -262,11 +202,62 @@ function animate() {
         player.velocity.x = 0;
     }
 
-    if (player.position.y + player.height <= platform.position.y &&
-        player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
-        player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
-        player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
+
+    platforms.forEach((platform) => {
+        if (player.position.y + player.height <= platform.position.y &&
+            player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
+            player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
+            player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
+        }
+        enemies.forEach((enemy) => {
+            if (enemy.position.y + enemy.height <= platform.position.y &&
+                enemy.position.y + enemy.height + enemy.velocity.y >= platform.position.y && //если враг находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
+                enemy.position.x + enemy.width >= platform.position.x && enemy.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
+                    enemy.velocity.y = 0;  //...то ускорение по оси Y обнуляется и вруг прекращает падать
+                }
+        })
+    })
+    
+    enemies.forEach((enemy) =>  {
+        if (player.attackBox.position.x + player.attackBox.width >= enemy.position.x && 
+            player.attackBox.position.x <= enemy.position.x + enemy.width && 
+            player.attackBox.position.y + player.attackBox.height >= enemy.position.y &&
+            player.attackBox.position.y <= enemy.position.y + enemy.height && 
+            player.isAttacking){ //пока поле атаки хоть как-то касается врага
+                player.isAttacking = false; //возвращаем значение false
+                enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
+                countAttace++; //считаем количество ударов
+                if (countAttace==3){  //если три удара есть
+                    score++; // +враг убит
+                    document.querySelector('#lineScore').innerText = "";
+                    document.querySelector('#lineScore').innerText += score;
+                    c.clearRect(600, 200, 80, 150);
+                    enemy= new Enemy(600, 500, 150, 80);
+                    countAttace=0;
+                }
+                  
+        }
+
+    if (player.ballBox.position.x + player.width + 400 >= enemy.position.x && 
+        player.ballBox.position.x + player.width <= enemy.position.x + enemy.width &&
+        player.ballBox.position.y + player.ballBox.radius >= enemy.position.y && 
+        player.ballBox.position.y <= enemy.position.y + enemy.height && 
+        player.isBallAttack){ //пока поле атаки хоть как-то касается врага
+            player.isBallAttack = false; //возвращаем значение false
+            enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
+            countAttace++; //считаем количество ударов
+            if (countAttace==5){  //если пять ударов есть
+                score++; // +враг убит
+                document.querySelector('#lineScore').innerText = "";
+                document.querySelector('#lineScore').innerText += score;
+                c.clearRect(600, 200, 80, 150);
+                enemy= new Enemy(600, 500, 150, 80);
+                countAttace=0;
+            }
+              
     }
+    })
+        
 }
 
 animate();
