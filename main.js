@@ -196,14 +196,58 @@ function animate() {
             enemy.update();
         }
     })
-    if (keys.right.pressed) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
-        player.velocity.x = 5;
+    if (!player.isGameOver){    //если не проиграл - игрок может двигаться
+        if (keys.right.pressed) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
+            player.velocity.x = 5;
+        }
+        else if (keys.left.pressed) {    //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
+            player.velocity.x = -5
+        }
+        else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение
+            player.velocity.x = 0;
+        }
+    
+        platforms.forEach((platform) => {
+            if (player.position.y + player.height <= platform.position.y &&
+                player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
+                player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
+                player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
+            }
+        })
     }
-    else if (keys.left.pressed) {    //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
-        player.velocity.x = -5
-    }
-    else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение
-        player.velocity.x = 0;
+    else{   //анимация, появляющаяся при проигрыше
+        if (player.gameOverFrame < 30){ //первые 30 кадров рисуется только затемнение экрана
+            if (player.gameOverFrame == 0){
+                canvas.addEventListener("click", (e) => {   //слушатель, проверяет нажатие кнопки "попробовать снова"
+                    let offsetX = e.offsetX;
+                    let offsetY = e.offsetY;
+                    if (offsetX >= 400 && offsetX <=840 && offsetY >= 420 && offsetY <= 550){
+                        init();
+                    }
+                })
+            }
+            c.fillStyle = `rgba(0, 0, 0, ${player.gameOverFrame * 0.03}`;
+            c.fillRect(0, 0, canvas.width, canvas.height);
+        }else{  // после 30 кадра появляется текст и кнопка
+            c.fillStyle = `rgba(0, 0, 0, 1`;
+            c.fillRect(0, 0, canvas.width, canvas.height);
+
+            c.fillStyle = 'white';
+            c.font = "40px PressStart";
+            c.fillText("Вы проиграли!", 350, 190);
+
+            c.fillStyle = ("rgb(72, 68, 78)");
+            c.beginPath();
+            c.roundRect(400, 420, 438, 127, 30);
+            c.fill();
+            c.closePath();
+
+            c.fillStyle = 'white';
+            c.font = "32px PressStart";
+            c.fillText("Попробовать", 438, 472, 359);
+            c.fillText("снова", 530, 522, 359);
+        }
+        player.gameOverFrame++;
     }
 
 
