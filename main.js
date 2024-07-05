@@ -101,7 +101,9 @@ class Enemy {   //объект врага, хранит данные о нём
 
         this.width = width,
         this.height = height,
-        this.health = 90; //здоровье врага
+        this.health = 90, //здоровье врага
+
+        this.isAlive = true
     }
 
     draw() {    //отрисовка врага
@@ -190,7 +192,9 @@ function animate() {
     })
     player.update();
     enemies.forEach((enemy) => {
-        enemy.update();
+        if (enemy.isAlive){
+            enemy.update();
+        }
     })
     if (keys.right.pressed) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
         player.velocity.x = 5;
@@ -223,16 +227,15 @@ function animate() {
             player.attackBox.position.x <= enemy.position.x + enemy.width && 
             player.attackBox.position.y + player.attackBox.height >= enemy.position.y &&
             player.attackBox.position.y <= enemy.position.y + enemy.height && 
-            player.isAttacking){ //пока поле атаки хоть как-то касается врага
+            player.isAttacking && enemy.isAlive){ //пока поле атаки хоть как-то касается врага
                 player.isAttacking = false; //возвращаем значение false
                 enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
                 countAttace++; //считаем количество ударов
-                if (countAttace==3){  //если три удара есть
+                if (enemy.health <=0){  //если здоровье равно нулю
+                    enemy.isAlive = false;  //враг сичтается убитым
                     score++; // +враг убит
                     document.querySelector('#lineScore').innerText = "";
                     document.querySelector('#lineScore').innerText += score;
-                    c.clearRect(600, 200, 80, 150);
-                    enemy= new Enemy(600, 500, 150, 80);
                     countAttace=0;
                 }
                   
@@ -242,16 +245,15 @@ function animate() {
         player.ballBox.position.x + player.width <= enemy.position.x + enemy.width &&
         player.ballBox.position.y + player.ballBox.radius >= enemy.position.y && 
         player.ballBox.position.y <= enemy.position.y + enemy.height && 
-        player.isBallAttack){ //пока поле атаки хоть как-то касается врага
+        player.isBallAttack && enemy.isAlive){ //пока поле атаки хоть как-то касается врага
             player.isBallAttack = false; //возвращаем значение false
             enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
             countAttace++; //считаем количество ударов
-            if (countAttace==5){  //если пять ударов есть
+            if (enemy.health <=0){  //если здоровье равно нулю
+                enemy.isAlive = false;  //враг сичтается убитым
                 score++; // +враг убит
                 document.querySelector('#lineScore').innerText = "";
                 document.querySelector('#lineScore').innerText += score;
-                c.clearRect(600, 200, 80, 150);
-                enemy= new Enemy(600, 500, 150, 80);
                 countAttace=0;
             }
               
