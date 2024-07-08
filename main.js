@@ -27,7 +27,7 @@ class Player {   //объект игрока, хранит данные о нё�
 
         this.attackBox = { //поле атаки посохом
             position: this.position,
-            width: 150,
+            width: 175,
             height: 50
         }
         this.ballBox = { //поле атаки шаром
@@ -164,9 +164,9 @@ function init(){    //функция инициализации (расстав�
     ]
     
     player = 0;
-    player = new Player(200, 400, 75, 150);
+    player = new Player(200, 400, 100, 150);
 
-    enemies= [new Enemy(500, 200, 80, 150)];
+    enemies= [new Enemy(500, 200, 100, 150)];
 }
 
 init();
