@@ -117,9 +117,9 @@ class Enemy {   //объект врага, хранит данные о нём
         
         this.attackCoolDown = 0;
 
-        this.alert = false;
+        this.alert = false; // Флаг встревоженного врага
 
-        this.isRight = true;
+        this.isRight = true; // Флаг того, куда смотрит враг (право или лево)
 
         this.positionStartX = x;
         this.positionEndX = x + 100;
@@ -157,12 +157,12 @@ class Enemy {   //объект врага, хранит данные о нём
         this.position.y += this.velocity.y;
         this.position.x += this.velocity.x;
 
-        if(this.alert == false){
-            if(this.position.x <= this.positionEndX && this.isRight){
+        if(this.alert == false){ //Проверяем, зашёл ли игрок в зону видимости врага
+            if(this.position.x <= this.positionEndX && this.isRight){ // Если у нас значение false, то враг находится в состоянии покоя и ходит 
                 this.velocity.x = 1;
             }
     
-            else if(this.position.x >= this.positionEndX && this.isRight){
+            else if(this.position.x >= this.positionEndX && this.isRight){ 
                 this.isRight = false;
     
             }
@@ -177,52 +177,52 @@ class Enemy {   //объект врага, хранит данные о нём
     
             }
 
-            if(Math.abs(this.position.x - player.position.x) <= 200 && Math.abs(this.position.y - player.position.y) < 50){
+            if(Math.abs(this.position.x - player.position.x) <= 200 && Math.abs(this.position.y - player.position.y) < 50){ // Если враг увидел игрока, то он становится встревоженным
                 this.alert = true;
             }
         }
 
-        else{
-            if(this.position.x < player.position.x){
-                this.velocity.x = 1.5;
+        else{  //Если врага встревожили, то он начинает следовать за игроком
+            if(this.position.x < player.position.x){ //Если игрок справа, то враг идёт направо
+                this.velocity.x = 1.5; //Ускорение перемещения врага
                 this.isRight = true;
 
                 if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0  && this.attackBox.position.y == player.position.y){
-                    this.attackCoolDown = 120;
+                    this.attackCoolDown = 120; //Задержка перед ударом
                     c.fillStyle = 'red';
                     c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
-                    if(this.attackBox.position.x + this.attackBox.width >= player.position.x && !player.protection){
+                    if(this.attackBox.position.x + this.attackBox.width >= player.position.x && !player.protection){ //Проверка попадания по игроку
                             console.log('кого-то ударили, Алина пропиши здоровье пожалуйста!')
                         }
                 }
             }
 
-            else if(this.position.x > player.position.x){
-                this.velocity.x = -1.5;
+            else if(this.position.x > player.position.x){// Если игрок слева, то идёт налево
+                this.velocity.x = -1.5; //Ускорение перемещения врага
                 this.isRight = false;
                 
                 if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0 && this.attackBox.position.y == player.position.y){
-                    this.attackCoolDown = 120;
+                    this.attackCoolDown = 120; //Задержка перед ударом
                     c.fillStyle = 'red';
                     c.fillRect(this.attackBox.position.x - 100, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
-                    if((this.attackBox.position.x - 100) - this.attackBox.width <= player.position.x  && !player.protection){
+                    if((this.attackBox.position.x - 100) - this.attackBox.width <= player.position.x  && !player.protection){ //Проверка попадания по игроку
                             console.log('кого-то ударили, Алина пропиши здоровье пожалуйста!')
                         }
                 }
             }
 
-            else if(Math.abs(this.position.y - player.position.y) > 0){
+            else if(Math.abs(this.position.y - player.position.y) > 0){ //Если игрок стоит на платформе или под ней, то враг останавливается
                 this.velocity.x = 0;
             }
             
         }
 
-        if(this.position.y + this.height == canvas.height){
+        if(this.position.y + this.height == canvas.height){ //Если враг упал в пропасть, то он умирает
             this.health = 0;
             this.isAlive = false;
         }
 
-        if(this.attackCoolDown > 0){
+        if(this.attackCoolDown > 0){ //Таймер для атаки
             this.attackCoolDown--;
         }
 
