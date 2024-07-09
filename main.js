@@ -321,10 +321,11 @@ function animate() {
             enemy.update();
         }
     })
-
-    c.drawImage(plat1, 0, 640, 420, 80); //отрисовка платформ 1 уровня
-    c.drawImage(plat1, 350, 390, 500, 80);
-    c.drawImage(plat1, 780, 640, 500, 80);
+    
+    platforms.forEach((plat) =>{ //визуальная отрисовка платформ
+        c.drawImage(plat1, plat.position.x, plat.position.y - 30, plat.width, plat.height + 30);
+    })
+    
 
     if (!player.isGameOver){    //если не проиграл - игрок может двигаться
         if (keys.right.pressed) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
