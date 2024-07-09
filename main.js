@@ -5,7 +5,7 @@ const c = canvas.getContext('2d');
 const gravity = 1;
 let score = 0; //счет убитых врагов
 let ballDistance=0; //дистанция полета шара
-document.querySelector('#lineScore').innerText = "0"; //счет в начале равен 0
+
 
 class Player {   //объект игрока, хранит данные о нём
     constructor(x, y, width, height) {   //нужен для создания игрока с заданными свойствами
@@ -24,6 +24,8 @@ class Player {   //объект игрока, хранит данные о нё�
 
         this.isGameOver = false,    //флаг, говорящий о том, что произошёл проигрыш
         this.gameOverFrame = 0,
+        this.turnToAttack="right"; //флаг, запоминающий последнее направление движения игрока
+        this.hv = 5; //количество сеердечек у игрока
 
         this.attackBox = { //поле атаки посохом
             position: this.position,
@@ -56,25 +58,48 @@ class Player {   //объект игрока, хранит данные о нё�
         //поле атаки посохом
         if (this.isAttacking &&  !this.protection ){
             c.fillStyle = 'red';
-            c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+            if (this.turnToAttack == "right"){
+                c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+            }
+            else{
+                c.fillRect(this.attackBox.position.x - this.attackBox.width + this.width, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+            }
         }
         //поле атаки шаром
         if (this.isBallAttack && !this.protection){
-            c.shadowColor = "#f0a105ab";
-            c.shadowOffsetX = -6;
-            c.beginPath();
-            c.arc(this.ballBox.position.x + ballDistance + this.width + this.ballBox.radius , this.ballBox.position.y+50, this.ballBox.radius, 0, Math.PI*2, false);
-            c.fillStyle = "orange";
-            c.fill();
+            if (this.turnToAttack == "right"){
+                c.beginPath();
+                c.arc(this.ballBox.position.x + ballDistance + this.width + this.ballBox.radius , this.ballBox.position.y+50, this.ballBox.radius, 0, Math.PI*2, false);
+                c.fillStyle = "orange";
+                c.fill();
+            }
+            else{
+                c.beginPath();
+                c.arc(this.ballBox.position.x - ballDistance - this.ballBox.radius , this.ballBox.position.y+50, this.ballBox.radius, 0, Math.PI*2, false);
+                c.fillStyle = "orange";
+                c.fill();
+            }
             ballDistance+=70;
         }
+        //здоровье игрока
+        c.fillStyle = '#f11b1b';
+        c.font = "bold 30px Times New Roman";
+        c.fillText("ЗДОРОВЬЕ: ", 800, 55);
+        c.fillStyle='#f11b1b';
+        c.fillRect(980, 25, 250, 40);
 
+        c.fillStyle='#16ad13';
+        c.fillRect(980, 25, 250 * this.hv / 5, 40);
     }
 
     update() {   //обновление местонвхождения игрока
         this.position.y += this.velocity.y;
         this.position.x += this.velocity.x;
         this.draw();
+
+        if(this.hv == 0){
+            this.isGameOver = true; //поднятие флага проигрыша, если жизнь у игрока закончилась
+        }
 
         if (this.position.y + this.height + this.velocity.y < canvas.height) {
             this.velocity.y += gravity;
@@ -84,7 +109,6 @@ class Player {   //объект игрока, хранит данные о нё�
         }
 
     }
-
     attack(){ //метод атаки посохом
         this.isAttacking = true;
         setTimeout(()=> {
@@ -138,15 +162,12 @@ class Enemy {   //объект врага, хранит данные о нём
 
     draw() {    //отрисовка врага
         c.fillStyle = 'purple';
-        c.shadowOffsetX = 0;
         c.fillRect(this.position.x, this.position.y, this.width, this.height);
         //ЗДОРОВЬЕ ВРАГА (линия)
         c.fillStyle='yellow';
-        c.shadowOffsetX = 0;
         c.fillRect(this.position.x, this.position.y - 25, this.width, 10);
 
         c.fillStyle='brown';
-        c.shadowOffsetX = 0;
         c.fillRect(this.position.x, this.position.y - 25, this.width * this.health / 90, 10);
 
     }
@@ -191,8 +212,8 @@ class Enemy {   //объект врага, хранит данные о нём
                     this.attackCoolDown = 120;
                     c.fillStyle = 'red';
                     c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
-                    if(this.attackBox.position.x + this.attackBox.width >= player.position.x && !player.protection){
-                            console.log('кого-то ударили, Алина пропиши здоровье пожалуйста!')
+                    if(!player.isGameOver && (this.attackBox.position.x + this.attackBox.width) >= player.position.x && !player.protection){
+                            player.hv--;
                         }
                 }
             }
@@ -205,8 +226,8 @@ class Enemy {   //объект врага, хранит данные о нём
                     this.attackCoolDown = 120;
                     c.fillStyle = 'red';
                     c.fillRect(this.attackBox.position.x - 100, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
-                    if((this.attackBox.position.x - 100) - this.attackBox.width <= player.position.x  && !player.protection){
-                            console.log('кого-то ударили, Алина пропиши здоровье пожалуйста!')
+                    if(!player.isGameOver && (this.attackBox.position.x - 100 - this.attackBox.width) <= player.position.x  && !player.protection){
+                            player.hv--;
                         }
                 }
             }
@@ -235,13 +256,7 @@ class Enemy {   //объект врага, хранит данные о нём
         else {
             this.velocity.y = 0;
         }
-        
-        
-
     }
-
-    
-
 }
 
 
@@ -277,8 +292,10 @@ function init(){    //функция инициализации (расстав�
 
     enemies= [new Enemy(380, 200, 100, 150)];
 
-    document.querySelector('#lineScore').innerText = "0";
     score=0;
+    c.fillStyle = '#f11b1b';
+    c.font = "bold 40px Times New Roman";
+    c.fillText(score, 140, 58);
 }
 
 init();
@@ -336,6 +353,14 @@ function animate() {
                 player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
             }
         })
+
+        //счет убитых врагов
+        c.fillStyle = '#f11b1b';
+        c.font = "bold 30px Times New Roman";
+        c.fillText("СЧЁТ: ", 40, 55);
+        c.fillStyle = '#f11b1b';
+        c.font = "bold 40px Times New Roman";
+        c.fillText(score, 140, 58);
     }
     else{   //анимация, появляющаяся при проигрыше
         if (player.gameOverFrame < 30){ //первые 30 кадров рисуется только затемнение экрана
@@ -389,37 +414,53 @@ function animate() {
     })
     
     enemies.forEach((enemy) =>  {
-        if (player.attackBox.position.x + player.attackBox.width >= enemy.position.x && 
-            player.attackBox.position.x <= enemy.position.x + enemy.width && 
-            player.attackBox.position.y + player.attackBox.height >= enemy.position.y &&
+        if( player.attackBox.position.y + player.attackBox.height >= enemy.position.y && 
             player.attackBox.position.y <= enemy.position.y + enemy.height && 
-            player.isAttacking && enemy.isAlive){ //пока поле атаки хоть как-то касается врага + игрок атакует + враг ещё жив
-                player.isAttacking = false; //возвращаем значение false
-                enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
-                if (enemy.health <=0){  //если здоровье равно нулю
-                    enemy.isAlive = false;  //враг сичтается убитым
-                    score++; // +враг убит
-                    document.querySelector('#lineScore').innerText = "";
-                    document.querySelector('#lineScore').innerText += score;
+            player.isAttacking && enemy.isAlive){ //если враг ещё жив + игрок атакует посохом
+                if (player.turnToAttack == "right" && player.attackBox.position.x + player.attackBox.width >= enemy.position.x && 
+                    player.attackBox.position.x <= enemy.position.x + enemy.width ) { //пока поле атаки хоть как-то касается врага и игрок повернут вправо
+                        player.isAttacking = false; //возвращаем значение false
+                        enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
+                        if (enemy.health <=0){  //если здоровье равно нулю
+                            enemy.isAlive = false;  //враг считается убитым
+                            score++; // +враг убит
+                        }
+                          
                 }
-                  
-        }
-
-    if (player.ballBox.position.x + player.width + 380 >= enemy.position.x && 
-        player.ballBox.position.x + player.width <= enemy.position.x + enemy.width &&
-        player.ballBox.position.y + player.ballBox.radius >= enemy.position.y && 
-        player.ballBox.position.y <= enemy.position.y + enemy.height && 
-        player.isBallAttack && enemy.isAlive){ //пока поле атаки хоть как-то касается врага + игрок атакует + враг ещё жив
-            player.isBallAttack = false; //возвращаем значение false
-            enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
-            if (enemy.health <=0){  //если здоровье равно нулю
-                enemy.isAlive = false;  //враг сичтается убитым
-                score++; // +враг убит
-                document.querySelector('#lineScore').innerText = "";
-                document.querySelector('#lineScore').innerText += score;
+                if (player.turnToAttack == "left" && player.attackBox.position.x >= enemy.position.x && 
+                    player.attackBox.position.x - player.attackBox.width <= enemy.position.x + enemy.width ) { //пока поле атаки хоть как-то касается врага и игрок повернут влево
+                        player.isAttacking = false; //возвращаем значение false
+                        enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
+                        if (enemy.health <=0){  //если здоровье равно нулю
+                            enemy.isAlive = false;  //враг считается убитым
+                            score++; // +враг убит
+                        }
+                          
+                }
             }
-              
-    }
+        
+        if (player.ballBox.position.y + player.ballBox.radius >= enemy.position.y && 
+            player.ballBox.position.y <= enemy.position.y + enemy.height && 
+            player.isBallAttack && enemy.isAlive){ //если враг ещё жив + игрок атакует шарами
+                if (player.turnToAttack == "right" && player.ballBox.position.x + player.width + 380 >= enemy.position.x && 
+                    player.ballBox.position.x + player.width <= enemy.position.x + enemy.width ){ //пока поле атаки хоть как-то касается врага и игрок повернут вправо
+                        player.isBallAttack = false; //возвращаем значение false
+                        enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
+                        if (enemy.health <=0){  //если здоровье равно нулю
+                            enemy.isAlive = false;  //враг считается убитым
+                            score++; // +враг убит
+                        }       
+                }
+                if (player.turnToAttack == "left" && player.ballBox.position.x >= enemy.position.x && 
+                    player.ballBox.position.x  - 380 <= enemy.position.x + enemy.width ){ //пока поле атаки хоть как-то касается врага и игрок повернут влево
+                        player.isBallAttack = false; //возвращаем значение false
+                        enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
+                        if (enemy.health <=0){  //если здоровье равно нулю
+                            enemy.isAlive = false;  //враг считается  убитым
+                            score++; // +враг убит
+                        }       
+                }
+            }
     })
         
 }
@@ -432,9 +473,11 @@ addEventListener('keydown', ({ code }) => {   //обработчик событ�
         switch (code) {
             case 'KeyA':
                 keys.left.pressed = true;
+                player.turnToAttack="left";
                 break;
             case 'KeyD':
                 keys.right.pressed = true;
+                player.turnToAttack="right";
                 break;
             case 'KeyW':
                 player.velocity.y -= 25;    //придания вертикального ускорения для создания видимости прыжка
