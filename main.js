@@ -217,6 +217,11 @@ class Enemy {   //объект врага, хранит данные о нём
             
         }
 
+        if(this.position.y + this.height == canvas.height){
+            this.health = 0;
+            this.isAlive = false;
+        }
+
         if(this.attackCoolDown > 0){
             this.attackCoolDown--;
         }
