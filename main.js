@@ -267,7 +267,7 @@ let platforms = [];
 let player;
 let enemies = [];
 let plat1 = new Image();
-plat1.src = "images/37692.png"; //платформа для 1 и 2 уровней
+plat1.src = "images/37692.png"; //платформа для 1 уровня
 
 function init(){    //функция инициализации (расставляет все объекты)
     platforms = [new Platform(350, 420, 500, 50), new Platform(0, 670, 420, 50),
