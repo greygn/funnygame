@@ -204,19 +204,19 @@ let keys = {    //объект для хранения состояния кла
 }
 
 
-let fon1 = new Image();
-fon1.src = "images/photo_2024-06-27_20-39-02.jpg";
+let fon1 = new Image(); 
+fon1.src = "images/photo_2024-06-27_20-39-02.jpg"; //фон 1 уровня
 let fon2 = new Image();
-fon2.src = "images/fon2.png";
+fon2.src = "images/fon2.png"; //фон 2 уровня
 let fon3 = new Image();
-fon3.src = "images/1653947325_64-furman-top-p-adskii-fon-krasivie-66.jpg";
+fon3.src = "images/1653947325_64-furman-top-p-adskii-fon-krasivie-66.jpg"; //фон 3 уровня
 let isfon1 = 1, isfon2 = 0, isfon3 = 0;
 
 function animate() {
     requestAnimationFrame(animate)  //функция сообщает браузеру о том, что необходимо вызвать анимацию, используя рекурсивный вызов функции
     c.clearRect(0, 0, canvas.width, canvas.height); //очищаем canvas, чтобы предотвратить появление остаточного изображения
     
-    if (isfon1 && !isfon2 && !isfon3){
+    if (isfon1 && !isfon2 && !isfon3){ //если 1 уровень, рисуем 1 фон
         c.drawImage(fon1, 0, 0, 1280, 720);
     }
 
