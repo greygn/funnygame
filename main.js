@@ -109,6 +109,21 @@ class Enemy {   //объект врага, хранит данные о нём
             y: y,
         }
 
+        this.attackBox = { //поле атаки посохом
+            position: this.position,
+            width: 175,
+            height: 50
+        }
+        
+        this.attackCoolDown = 0;
+
+        this.alert = false;
+
+        this.isRight = true;
+
+        this.positionStartX = x;
+        this.positionEndX = x + 100;
+
         this.velocity = {   //объект, хранящий ускорение врага в двух осях
             x: 0,
             y: 3
@@ -133,7 +148,7 @@ class Enemy {   //объект врага, хранит данные о нём
         c.fillStyle='brown';
         c.shadowOffsetX = 0;
         c.fillRect(this.position.x, this.position.y - 25, this.width * this.health / 90, 10);
-       
+
     }
 
 
@@ -141,6 +156,71 @@ class Enemy {   //объект врага, хранит данные о нём
     update() {   //обновление местонахождения врага
         this.position.y += this.velocity.y;
         this.position.x += this.velocity.x;
+
+        if(this.alert == false){
+            if(this.position.x <= this.positionEndX && this.isRight){
+                this.velocity.x = 1;
+            }
+    
+            else if(this.position.x >= this.positionEndX && this.isRight){
+                this.isRight = false;
+    
+            }
+    
+            else if(this.position.x >= this.positionStartX && !this.isRight){
+                this.velocity.x = -1;
+    
+            }
+    
+            else if(this.position.x <= this.positionStartX && !this.isRight){
+                this.isRight = true;
+    
+            }
+
+            if(Math.abs(this.position.x - player.position.x) <= 200 && Math.abs(this.position.y - player.position.y) < 50){
+                this.alert = true;
+            }
+        }
+
+        else{
+            if(this.position.x < player.position.x){
+                this.velocity.x = 1.5;
+                this.isRight = true;
+
+                if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0  && this.attackBox.position.y == player.position.y){
+                    this.attackCoolDown = 120;
+                    c.fillStyle = 'red';
+                    c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+                    if(this.attackBox.position.x + this.attackBox.width >= player.position.x && !player.protection){
+                            console.log('кого-то ударили, Алина пропиши здоровье пожалуйста!')
+                        }
+                }
+            }
+
+            else if(this.position.x > player.position.x){
+                this.velocity.x = -1.5;
+                this.isRight = false;
+                
+                if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0 && this.attackBox.position.y == player.position.y){
+                    this.attackCoolDown = 120;
+                    c.fillStyle = 'red';
+                    c.fillRect(this.attackBox.position.x - 100, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+                    if((this.attackBox.position.x - 100) - this.attackBox.width <= player.position.x  && !player.protection){
+                            console.log('кого-то ударили, Алина пропиши здоровье пожалуйста!')
+                        }
+                }
+            }
+
+            else if(Math.abs(this.position.y - player.position.y) > 0){
+                this.velocity.x = 0;
+            }
+            
+        }
+
+        if(this.attackCoolDown > 0){
+            this.attackCoolDown--;
+        }
+
         this.draw();
         
 
@@ -150,8 +230,12 @@ class Enemy {   //объект врага, хранит данные о нём
         else {
             this.velocity.y = 0;
         }
+        
+        
 
     }
+
+    
 
 }
 
@@ -179,14 +263,14 @@ let player;
 let enemies = [];
 
 function init(){    //функция инициализации (расставляет все объекты)
-    platforms = [new Platform(270, 400, 300, 50), new Platform(0, 670, 300, 50),
+    platforms = [new Platform(270, 400, 500, 50), new Platform(0, 670, 300, 50),
         new Platform(300, 670, 300, 50)
     ]
     
     player = 0;
-    player = new Player(200, 400, 100, 150);
+    player = new Player(50, 400, 100, 150);
 
-    enemies= [new Enemy(500, 200, 100, 150)];
+    enemies= [new Enemy(380, 200, 100, 150)];
 
     document.querySelector('#lineScore').innerText = "0";
     score=0;
