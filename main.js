@@ -43,6 +43,8 @@ class Player {   //объект игрока, хранит данные о нё�
 
         this.jumped = false;  //флаг того, что игрок прыгнул
 
+        this.distance = 0;
+
         this.attackBox = { //поле атаки посохом
             position: this.position,
             width: 175,
@@ -159,7 +161,7 @@ class Player {   //объект игрока, хранит данные о нё�
             this.isGameOver = true; //поднятие флага проигрыша, если жизнь у игрока закончилась
         }
 
-        if (this.position.y + this.height + this.velocity.y < canvas.height) {
+        if (this.position.y < canvas.height) {
             this.velocity.y += gravity;
         }
         else {
@@ -203,7 +205,7 @@ class Enemy {   //объект врага, хранит данные о нём
 
         this.isRight = true; // Флаг того, куда смотрит враг (право или лево)
 
-        this.positionStartX = x;
+        this.positionStartX = x - 100;
         this.positionEndX = x + 100;
 
         this.velocity = {   //объект, хранящий ускорение врага в двух осях
@@ -349,7 +351,7 @@ class Enemy {   //объект врага, хранит данные о нём
             
         }
 
-        if(this.position.y + this.height == canvas.height){ //Если враг упал в пропасть, то он умирает
+        if((this.position.y - 40) >= canvas.height){ //Если враг упал в пропасть, то он умирает
             this.health = 0;
             this.isAlive = false;
             score++;
@@ -365,9 +367,9 @@ class Enemy {   //объект врага, хранит данные о нём
         if (this.position.y + this.height + this.velocity.y < canvas.height) {
             this.velocity.y += gravity;
         }
-        else {
-            this.velocity.y = 0;
-        }
+        // else {
+        //     this.velocity.y = 0;
+        // }
     }
 }
 
@@ -411,7 +413,7 @@ function init(){    //функция инициализации (расстав�
     player = 0;
     player = new Player(50, 400, 100, 150);
 
-    enemies= [new Enemy(380, 200, 100, 150)];
+    enemies= [new Enemy(580, 200, 100, 150)];
 
     score=0;
     c.fillStyle = 'white';
@@ -471,17 +473,35 @@ function animate() {
         else if (keys.left.pressed && player.position.x > 50) {    //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
             player.velocity.x = -5;
         }
-        else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение
+        else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение   
             player.velocity.x = 0;
-            if (keys.right.pressed){
+            if (keys.right.pressed && player.distance < 2750){
                 platforms.forEach((platform) =>{
                     platform.position.x -= 5;
                 })
+                enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
+                    enemy.position.x -= 5;
+                    enemy.positionStartX -= 5;
+                    enemy.positionEndX -= 5;
+                })
+                player.distance += 5;
             }
-            else if (keys.left.pressed){
+            else if (keys.left.pressed && player.position.x > 0){
+                player.velocity.x = -5;
+            }
+            else if (keys.left.pressed && player.distance > 0){
                 platforms.forEach((platform) =>{
                     platform.position.x += 5;
                 })
+                enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
+                    enemy.position.x += 5;
+                    enemy.positionStartX += 5;
+                    enemy.positionEndX += 5;
+                })
+                player.distance -= 5;
+            }
+            else if (keys.right.pressed && (player.position.x + player.width) < canvas.width){
+                player.velocity.x = 5;
             }
         }
     
@@ -490,7 +510,7 @@ function animate() {
                 player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
                 player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
                 player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
-                player.jumped = false;  //игрок может сновы прыгнуть
+                player.jumped = false;  //игрок может снова прыгнуть
             }
         })
 
