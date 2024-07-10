@@ -2,6 +2,9 @@ const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 const aliceSprites = new Image();   //картинка спрайта Алисы
 aliceSprites.src = "sprites/aliceSprites.png"
+const enemySprites = new Image();   //картинка спрайта врага
+enemySprites.src = "sprites/enemySprites.png"
+
 
 const gravity = 1;
 let score = 0; //счет убитых врагов
@@ -34,6 +37,8 @@ class Player {   //объект игрока, хранит данные о нё�
         this.animationTick = 0, //тик анимации (счётчик кадров)
         this.animationStage = 0,    //стадия анимации (картинки анимации)
         this.attackAnim = false,
+
+        this.jumped = false;  //флаг того, что игрок прыгнул
 
         this.attackBox = { //поле атаки посохом
             position: this.position,
@@ -117,10 +122,10 @@ class Player {   //объект игрока, хранит данные о нё�
         if (this.isAttacking &&  !this.protection ){
             c.fillStyle = 'red';
             if (this.turnToAttack == "right"){
-                c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+                //c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
             }
             else{
-                c.fillRect(this.attackBox.position.x - this.attackBox.width + this.width, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+                //c.fillRect(this.attackBox.position.x - this.attackBox.width + this.width, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
             }
         }
         //поле атаки шаром
@@ -140,8 +145,8 @@ class Player {   //объект игрока, хранит данные о нё�
             ballDistance+=70;
         }
         //здоровье игрока
-        c.fillStyle = '#f11b1b';
-        c.font = "bold 30px Times New Roman";
+        c.fillStyle = 'white';
+        c.font = "20px PressStart";
         c.fillText("ЗДОРОВЬЕ: ", 800, 55);
         c.fillStyle='#f11b1b';
         c.fillRect(980, 25, 250, 40);
@@ -216,11 +221,66 @@ class Enemy {   //объект врага, хранит данные о нём
         this.health = 90, //здоровье врага
 
         this.isAlive = true //флаг жизни врага
+
+        this.currentState = "run" //очень много флагов состояния врага для анимации
+        this.lastTurn = "right",
+        this.lastState = "stand",
+        this.animationTick = 0, //тик анимации (счётчик кадров)
+        this.animationStage = 0,    //стадия анимации (картинки анимации)
+        this.attackAnim = false
     }
 
     draw() {    //отрисовка врага
-        c.fillStyle = 'purple';
-        c.fillRect(this.position.x, this.position.y, this.width, this.height);
+
+        if (this.animationTick == 10){  //считаем кадры анимации
+            this.animationTick = 0;
+            this.animationStage++;  //переключаем картинки
+            if (this.animationStage == 6){
+                if (this.attackAnim){
+                    this.attackAnim = false
+                    
+                }
+                this.animationStage = 0;
+                this.currentState = "run";
+            }
+        }
+        this.animationTick++;
+
+
+        if (this.currentState != this.lastState){   //смена состояния 
+            if(this.attackAnim){
+                this.currentState = "attack";   //при этом анимация атаки не должна прерываться
+            }
+            
+        }
+        
+        switch (this.currentState){
+            case "stand":   //анимация стойки
+                if (this.isRight){
+                    c.drawImage(enemySprites, 100 * this.animationStage, 600, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                else{
+                    c.drawImage(enemySprites, 100 * this.animationStage, 750, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                break;
+            case "run": //анимация бега
+                if (this.isRight){
+                    c.drawImage(enemySprites, 100 * this.animationStage, 0, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                else{
+                    c.drawImage(enemySprites, 100 * this.animationStage, 150, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                break;
+            case "attack":  //анимация атаки
+                if (this.isRight){
+                    c.drawImage(enemySprites, 100 * this.animationStage, 300, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                else{
+                    c.drawImage(enemySprites, 100 * this.animationStage, 450, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                break;
+        }
+
         //ЗДОРОВЬЕ ВРАГА (линия)
         c.fillStyle='yellow';
         c.fillRect(this.position.x, this.position.y - 25, this.width, 10);
@@ -268,7 +328,8 @@ class Enemy {   //объект врага, хранит данные о нём
 
                 if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0  && this.attackBox.position.y == player.position.y){
                     this.attackCoolDown = 120; //Задержка перед ударом
-                    c.fillStyle = 'red';
+                    
+                    this.currentState = "attack";
                     c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
                     if(!player.isGameOver && (this.attackBox.position.x + this.attackBox.width) >= player.position.x && !player.protection){
                         player.hv--;
@@ -282,7 +343,8 @@ class Enemy {   //объект врага, хранит данные о нём
                 
                 if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0 && this.attackBox.position.y == player.position.y){
                     this.attackCoolDown = 120; //Задержка перед ударом
-                    c.fillStyle = 'red';
+                    
+                    this.currentState = "attack";
                     c.fillRect(this.attackBox.position.x - 100, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
                     if(!player.isGameOver && (this.attackBox.position.x - 100 - this.attackBox.width) <= player.position.x  && !player.protection){
                         player.hv--;
@@ -419,15 +481,16 @@ function animate() {
                 player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
                 player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
                 player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
+                player.jumped = false;  //игрок может сновы прыгнуть
             }
         })
 
         //счет убитых врагов
-        c.fillStyle = '#f11b1b';
-        c.font = "bold 30px Times New Roman";
-        c.fillText("СЧЁТ: ", 40, 55);
-        c.fillStyle = '#f11b1b';
-        c.font = "bold 40px Times New Roman";
+        c.fillStyle = 'white';
+        c.font = "20px PressStart";
+        c.fillText("СЧЕТ: ", 40, 55);
+        c.fillStyle = 'white';
+        c.font = "30px PressStart";
         c.fillText(score, 140, 58);
     }
     else{   //анимация, появляющаяся при проигрыше
@@ -550,7 +613,11 @@ addEventListener('keydown', ({ code }) => {   //обработчик событ�
                 player.currentState = "run"
                 break;
             case 'KeyW':
-                player.velocity.y -= 25;    //придания вертикального ускорения для создания видимости прыжка
+                if (!player.jumped){    //прыгнуть можно только один раз
+                    player.velocity.y -= 25;    //придания вертикального ускорения для создания видимости прыжка
+                    player.jumped = true;   //игрок прыгнул
+                }
+                
                 break;
             case 'KeyQ':
                 player.attack();
