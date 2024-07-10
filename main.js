@@ -395,10 +395,17 @@ let player;
 let enemies = [];
 let plat1 = new Image();
 plat1.src = "images/37692.png"; //платформа для 1 уровня
+let plat2 = new Image();
+plat2.src = "images/37693.png"; //платформа для 2 уровня
+let plat3 = new Image();
+plat3.src = "images/37694.png"; //платформа для 3 уровня
 
 function init(){    //функция инициализации (расставляет все объекты)
     platforms = [new Platform(350, 420, 500, 50), new Platform(0, 670, 420, 50),
-        new Platform(780, 670, 500, 50)
+        new Platform(780, 670, 500, 50), new Platform(1280, 670, 300, 50),
+        new Platform(1530, 450, 300, 50), new Platform(1780, 250, 300, 50),
+        new Platform(2080, 670, 680, 50), new Platform(2300, 450, 300, 50),
+        new Platform(2760, 670, 1280, 50), new Platform(3060, 420, 500, 50)
     ]
     
     player = 0;
@@ -426,7 +433,6 @@ let keys = {    //объект для хранения состояния кла
 
 let fon1 = new Image(); 
 fon1.src = "images/photo_back.png"; //фон
-let isfon1 = 1, isfon2 = 0, isfon3 = 0;
 
 function animate() {
     requestAnimationFrame(animate)  //функция сообщает браузеру о том, что необходимо вызвать анимацию, используя рекурсивный вызов функции
@@ -445,20 +451,38 @@ function animate() {
         }
     })
     
-    platforms.forEach((plat) =>{ //визуальная отрисовка платформ
-        c.drawImage(plat1, plat.position.x, plat.position.y - 30, plat.width, plat.height + 30);
-    })
+    for (let i = 0; i < 3; i++){ //визуальная отрисовка платформ 1 локации
+        c.drawImage(plat1, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
+    }
+    
+    for (let i = 3; i < 8; i++){ //визуальная отрисовка платформ 2 локации
+        c.drawImage(plat2, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
+    }
+
+    for (let i = 8; i < 10; i++){ //визуальная отрисовка платформ 2 локации
+        c.drawImage(plat3, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
+    }
     
 
     if (!player.isGameOver){    //если не проиграл - игрок может двигаться
-        if (keys.right.pressed) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
+        if (keys.right.pressed && player.position.x < 600) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
             player.velocity.x = 5;
         }
-        else if (keys.left.pressed) {    //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
+        else if (keys.left.pressed && player.position.x > 50) {    //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
             player.velocity.x = -5;
         }
         else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение
             player.velocity.x = 0;
+            if (keys.right.pressed){
+                platforms.forEach((platform) =>{
+                    platform.position.x -= 5;
+                })
+            }
+            else if (keys.left.pressed){
+                platforms.forEach((platform) =>{
+                    platform.position.x += 5;
+                })
+            }
         }
     
         platforms.forEach((platform) => {
