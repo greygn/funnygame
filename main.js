@@ -53,9 +53,9 @@ class Player {   //объект игрока, хранит данные о нё�
 
     draw() {    //отрисовка игрока
         
-        if (this.animationTick == 10){
+        if (this.animationTick == 10){  //считаем кадры анимации
             this.animationTick = 0;
-            this.animationStage++;
+            this.animationStage++;  //переключаем картинки
             if (this.animationStage == 6){
                 if (this.attackAnim){
                     this.attackAnim = false
@@ -65,11 +65,11 @@ class Player {   //объект игрока, хранит данные о нё�
         }
         this.animationTick++;
 
-        if (this.currentState != this.lastState){
+        if (this.currentState != this.lastState){   //смена состояния 
             if(this.attackAnim){
-                this.currentState = "attack";
+                this.currentState = "attack";   //при этом анимация атаки не должна прерываться
             }
-            else if(!keys.right.pressed && !keys.left.pressed){
+            else if(!keys.right.pressed && !keys.left.pressed){ //если ничего не нажато - Алиса стоит
                 this.lastState = "stand"
                 this.currentState = "stand";
                 this.animationStage = 0;
@@ -78,9 +78,8 @@ class Player {   //объект игрока, хранит данные о нё�
         
         }
         
-        console.log(this.currentState, keys.right.pressed)
         switch (this.currentState){
-            case "stand":
+            case "stand":   //анимация стойки
                 if (this.turnToAttack == "right"){
                     c.drawImage(aliceSprites, 100 * this.animationStage, 600, 100, 150, this.position.x, this.position.y, 100, 150);
                 }
@@ -88,7 +87,7 @@ class Player {   //объект игрока, хранит данные о нё�
                     c.drawImage(aliceSprites, 100 * this.animationStage, 750, 100, 150, this.position.x, this.position.y, 100, 150);
                 }
                 break;
-            case "run":
+            case "run": //анимация бега
                 if (this.turnToAttack == "right"){
                     c.drawImage(aliceSprites, 100 * this.animationStage, 0, 100, 150, this.position.x, this.position.y, 100, 150);
                 }
@@ -96,7 +95,7 @@ class Player {   //объект игрока, хранит данные о нё�
                     c.drawImage(aliceSprites, 100 * this.animationStage, 150, 100, 150, this.position.x, this.position.y, 100, 150);
                 }
                 break;
-            case "attack":
+            case "attack":  //анимация атаки
                 if (this.turnToAttack == "right"){
                     c.drawImage(aliceSprites, 100 * this.animationStage, 300, 100, 150, this.position.x, this.position.y, 100, 150);
                 }
