@@ -1,6 +1,7 @@
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
-
+const aliceSprites = new Image();   //картинка спрайта Алисы
+aliceSprites.src = "sprites/aliceSprites.png"
 
 const gravity = 1;
 let score = 0; //счет убитых врагов
@@ -27,6 +28,13 @@ class Player {   //объект игрока, хранит данные о нё�
         this.turnToAttack="right"; //флаг, запоминающий последнее направление движения игрока
         this.hv = 5; //количество сеердечек у игрока
 
+        this.currentState = "stand" //очень много флагов состояния игрока для анимации
+        this.lastTurn = "right",
+        this.lastState = "stand",
+        this.animationTick = 0, //тик анимации (счётчик кадров)
+        this.animationStage = 0,    //стадия анимации (картинки анимации)
+        this.attackAnim = false,
+
         this.attackBox = { //поле атаки посохом
             position: this.position,
             width: 175,
@@ -44,8 +52,59 @@ class Player {   //объект игрока, хранит данные о нё�
     }
 
     draw() {    //отрисовка игрока
-        c.fillStyle = 'purple';
-        c.fillRect(this.position.x, this.position.y, this.width, this.height);
+        
+        if (this.animationTick == 10){
+            this.animationTick = 0;
+            this.animationStage++;
+            if (this.animationStage == 6){
+                if (this.attackAnim){
+                    this.attackAnim = false
+                }
+                this.animationStage = 0;
+            }
+        }
+        this.animationTick++;
+
+        if (this.currentState != this.lastState){
+            if(this.attackAnim){
+                this.currentState = "attack";
+            }
+            else if(!keys.right.pressed && !keys.left.pressed){
+                this.lastState = "stand"
+                this.currentState = "stand";
+                this.animationStage = 0;
+                this.animationTick = 0;
+            }
+        
+        }
+        
+        console.log(this.currentState, keys.right.pressed)
+        switch (this.currentState){
+            case "stand":
+                if (this.turnToAttack == "right"){
+                    c.drawImage(aliceSprites, 100 * this.animationStage, 600, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                else{
+                    c.drawImage(aliceSprites, 100 * this.animationStage, 750, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                break;
+            case "run":
+                if (this.turnToAttack == "right"){
+                    c.drawImage(aliceSprites, 100 * this.animationStage, 0, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                else{
+                    c.drawImage(aliceSprites, 100 * this.animationStage, 150, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                break;
+            case "attack":
+                if (this.turnToAttack == "right"){
+                    c.drawImage(aliceSprites, 100 * this.animationStage, 300, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                else{
+                    c.drawImage(aliceSprites, 100 * this.animationStage, 450, 100, 150, this.position.x, this.position.y, 100, 150);
+                }
+                break;
+        }
 
        //защита щитом
        if (this.protection){
@@ -482,23 +541,29 @@ addEventListener('keydown', ({ code }) => {   //обработчик событ�
         switch (code) {
             case 'KeyA':
                 keys.left.pressed = true;
-                player.turnToAttack="left";
+                player.turnToAttack = "left";
+                player.currentState = "run"
                 break;
             case 'KeyD':
                 keys.right.pressed = true;
-                player.turnToAttack="right";
+                player.turnToAttack = "right";
+                player.currentState = "run"
                 break;
             case 'KeyW':
                 player.velocity.y -= 25;    //придания вертикального ускорения для создания видимости прыжка
                 break;
-            case 'Digit1':
+            case 'KeyQ':
                 player.attack();
+                player.currentState = "attack";
+                player.attackAnim = true;
             break;
-            case 'Digit2':
+            case 'KeyE':
                 player.magic();
+                player.currentState = "attack"
+                player.attackAnim = true;
                 ballDistance=0;
             break;
-            case 'Digit3':
+            case 'KeyR':
                 player.protection = true;
             break;
         }
@@ -513,7 +578,7 @@ addEventListener('keyup', ({ code }) => { //обработчик события 
         case 'KeyD':
             keys.right.pressed = false;
             break;
-            case 'Digit3':
+            case 'KeyR':
                 player.protection = false;
             break;
     }
