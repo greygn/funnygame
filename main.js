@@ -241,6 +241,7 @@ class Enemy {   //объект врага, хранит данные о нём
         if(this.position.y + this.height == canvas.height){ //Если враг упал в пропасть, то он умирает
             this.health = 0;
             this.isAlive = false;
+            score++;
         }
 
         if(this.attackCoolDown > 0){ //Таймер для атаки
