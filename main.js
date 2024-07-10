@@ -4,6 +4,9 @@ const aliceSprites = new Image();   //картинка спрайта Алисы
 aliceSprites.src = "sprites/aliceSprites.png"
 const enemySprites = new Image();   //картинка спрайта врага
 enemySprites.src = "sprites/enemySprites.png"
+const  heart = new Image();   //сердце (здоровье игрока)
+heart.src = "images/heart.png";
+let arrayOfHearts = []; //массив, хранящий сердца игрока
 
 
 const gravity = 1;
@@ -29,7 +32,7 @@ class Player {   //объект игрока, хранит данные о нё�
         this.isGameOver = false,    //флаг, говорящий о том, что произошёл проигрыш
         this.gameOverFrame = 0,
         this.turnToAttack="right"; //флаг, запоминающий последнее направление движения игрока
-        this.hv = 5; //количество сеердечек у игрока
+        this.countHv = 5; //количество сердечек у игрока
 
         this.currentState = "stand" //очень много флагов состояния игрока для анимации
         this.lastTurn = "right",
@@ -118,14 +121,14 @@ class Player {   //объект игрока, хранит данные о нё�
             c.fill();
         }
 
-        //поле атаки посохом
+        //поле атаки посохом (условие ненужное)
         if (this.isAttacking &&  !this.protection ){
             c.fillStyle = 'red';
             if (this.turnToAttack == "right"){
-                //c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+                // c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
             }
             else{
-                //c.fillRect(this.attackBox.position.x - this.attackBox.width + this.width, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+                // c.fillRect(this.attackBox.position.x - this.attackBox.width + this.width, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
             }
         }
         //поле атаки шаром
@@ -144,15 +147,7 @@ class Player {   //объект игрока, хранит данные о нё�
             }
             ballDistance+=70;
         }
-        //здоровье игрока
-        c.fillStyle = 'white';
-        c.font = "20px PressStart";
-        c.fillText("ЗДОРОВЬЕ: ", 800, 55);
-        c.fillStyle='#f11b1b';
-        c.fillRect(980, 25, 250, 40);
 
-        c.fillStyle='#16ad13';
-        c.fillRect(980, 25, 250 * this.hv / 5, 40);
     }
 
     update() {   //обновление местонвхождения игрока
@@ -160,7 +155,7 @@ class Player {   //объект игрока, хранит данные о нё�
         this.position.x += this.velocity.x;
         this.draw();
 
-        if(this.hv == 0){
+        if(this.countHv == 0){
             this.isGameOver = true; //поднятие флага проигрыша, если жизнь у игрока закончилась
         }
 
@@ -328,11 +323,9 @@ class Enemy {   //объект врага, хранит данные о нём
 
                 if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0  && this.attackBox.position.y == player.position.y){
                     this.attackCoolDown = 120; //Задержка перед ударом
-                    
                     this.currentState = "attack";
-                    c.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
                     if(!player.isGameOver && (this.attackBox.position.x + this.attackBox.width) >= player.position.x && !player.protection){
-                        player.hv--;
+                        player.countHv--;
                         }
                 }
             }
@@ -343,12 +336,10 @@ class Enemy {   //объект врага, хранит данные о нём
                 
                 if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0 && this.attackBox.position.y == player.position.y){
                     this.attackCoolDown = 120; //Задержка перед ударом
-                    
                     this.currentState = "attack";
-                    c.fillRect(this.attackBox.position.x - 100, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
                     if(!player.isGameOver && (this.attackBox.position.x - 100 - this.attackBox.width) <= player.position.x  && !player.protection){
-                        player.hv--;
-                        }
+                        player.countHv--;
+                    }
                 }
             }
 
@@ -416,8 +407,8 @@ function init(){    //функция инициализации (расстав�
     enemies= [new Enemy(380, 200, 100, 150)];
 
     score=0;
-    c.fillStyle = '#f11b1b';
-    c.font = "bold 40px Times New Roman";
+    c.fillStyle = 'white';
+    c.font = "30px PressStart";
     c.fillText(score, 140, 58);
 }
 
@@ -486,6 +477,19 @@ function animate() {
         c.fillStyle = 'white';
         c.font = "30px PressStart";
         c.fillText(score, 140, 58);
+
+        //здоровье игрока
+        c.fillStyle = 'white';
+        c.font = "20px PressStart";
+        c.fillText("ЗДОРОВЬЕ: ", 800, 55);
+        for (let i = 0; i < player.countHv; i++) { 
+            arrayOfHearts[i] = heart;
+        }
+        for (let i = 0; i < player.countHv; i++) { 
+                arrayOfHearts[i].onload = function(n){
+                c.drawImage(arrayOfHearts[n], 980 + 50*n, 20 , 50, 50);
+            }(i);
+        }
     }
     else{   //анимация, появляющаяся при проигрыше
         if (player.gameOverFrame < 30){ //первые 30 кадров рисуется только затемнение экрана
