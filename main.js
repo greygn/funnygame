@@ -5,7 +5,9 @@ aliceSprites.src = "sprites/aliceSprites.png"
 const enemySprites = new Image();   //картинка спрайта врага
 enemySprites.src = "sprites/enemySprites.png"
 const dragonSprites = new Image();
-dragonSprites.src = "sprites/dragonSprites.png"
+dragonSprites.src = "sprites/dragonSprites.png";
+let apple = new Image();
+apple.src = "images/apple.png"; //картинка яблока
 
 const  heart = new Image();   //сердце (здоровье игрока)
 heart.src = "images/heart.png";
@@ -574,6 +576,24 @@ class Platform {    //класс платформы
     }
 }
 
+class Apple{ //класс яблок
+    constructor(x, y, width, height) {
+        this.position = {
+            x: x,
+            y: y
+        }
+        this.have = true;
+        this.width = width;
+        this.height = height;
+    }
+
+    draw() {
+        c.drawImage(apple, this.position.x, this.position.y , this.width, this.height);
+    }
+}
+
+
+let apples = []; //массив яблок
 let platforms = [];
 let player;
 let enemies = [];
@@ -592,6 +612,9 @@ function init(){    //функция инициализации (расстав�
         new Platform(2080, 670, 680, 50), new Platform(2300, 450, 300, 50),
         new Platform(2760, 670, 1280, 50), new Platform(2800, 420, 500, 50)
     ]
+
+    apples = [new Apple(1080, 620, 45, 50), new Apple(2350, 400, 45, 50),
+        new Apple(3200, 370, 45, 50)];
     
     player = 0;
     player = new Player(50, 400, 100, 150);
@@ -656,6 +679,12 @@ function animate() {
     for (let i = 8; i < 10; i++){ //визуальная отрисовка платформ 2 локации
         c.drawImage(plat3, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
     }
+
+    for( let i=0; i<apples.length; i++){ //отрисовка яблок
+        if(apples[i].have){
+            apples[i].draw();
+        }
+    }
     
 
     if (!player.isGameOver){    //если не проиграл - игрок может двигаться
@@ -671,6 +700,9 @@ function animate() {
                 platforms.forEach((platform) =>{
                     platform.position.x -= 5;
                 })
+                apples.forEach((apple) =>{
+                    apple.position.x -= 5;
+                })
                 enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
                     enemy.position.x -= 5;
                     enemy.positionStartX -= 5;
@@ -685,6 +717,9 @@ function animate() {
             else if (keys.left.pressed && player.distance > 0 && player.distance != 2750){
                 platforms.forEach((platform) =>{
                     platform.position.x += 5;
+                })
+                apples.forEach((apple) =>{
+                    apple.position.x += 5;
                 })
                 enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
                     enemy.position.x += 5;
@@ -705,6 +740,17 @@ function animate() {
                 player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
                 player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
                 player.jumped = false;  //игрок может снова прыгнуть
+            }
+        })
+
+        apples.forEach((apple) => { //если координаты игрока совпали с координатами ябллока, + сердечко к здоровью игрока
+            if (player.position.x + player.width >= apple.position.x && player.position.x <= apple.position.x + apple.width &&
+                player.position.y + player.height >= apple.position.y && 
+                player.position.y <= apple.position.y + apple.height && apple.have){
+                if (player.countHv < 5){
+                    player.countHv++;
+                }
+                apple.have = false; 
             }
         })
 
