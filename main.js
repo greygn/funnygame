@@ -13,6 +13,8 @@ const  heart = new Image();   //сердце (здоровье игрока)
 heart.src = "images/heart.png";
 const flameImg = new Image();
 flameImg.src = "images/flameTexture.JPG";
+const diamondImg = new Image();
+diamondImg.src = "images/diamond.png";
 
 let arrayOfHearts = []; //массив, хранящий сердца игрока
 
@@ -576,6 +578,37 @@ class Platform {    //класс платформы
     }
 }
 
+class Diamond {
+    constructor(x, y){
+        this.position = {
+            x: x,
+            y: y
+        }
+
+        this.width = 100;
+        this.height = 75;
+
+        this.isCollected = false;   //флаг того, что алмазы собраны
+    }
+
+    draw(){ //отрисовка алмазов
+        if (!this.isCollected){
+            c.drawImage(diamondImg, this.position.x, this.position.y, this.width, this.height)
+        }
+        
+    }
+
+    update(){
+        if (player.position.x >= (this.position.x - 20) && player.position.x <= (this.position.x + this.width + 20) &&
+            player.position.y >= (this.position.y - 20) && player.position.y <= (this.position.y + this.height + 20) && !this.isCollected){
+                this.isCollected = true;    //отмечаем то, что они собраны
+                score += 50;
+            }
+            
+        this.draw();
+    }
+}
+
 class Apple{ //класс яблок
     constructor(x, y, width, height) {
         this.position = {
@@ -597,6 +630,7 @@ let apples = []; //массив яблок
 let platforms = [];
 let player;
 let enemies = [];
+let diamonds = [];
 let dragon;
 let plat1 = new Image();
 plat1.src = "images/37692.png"; //платформа для 1 уровня
@@ -607,10 +641,15 @@ plat3.src = "images/37694.png"; //платформа для 3 уровня
 
 function init(){    //функция инициализации (расставляет все объекты)
     platforms = [new Platform(350, 420, 500, 50), new Platform(0, 670, 420, 50),
-        new Platform(780, 670, 500, 50), new Platform(1280, 670, 300, 50),
-        new Platform(1530, 450, 300, 50), new Platform(1780, 250, 300, 50),
-        new Platform(2080, 670, 680, 50), new Platform(2300, 450, 300, 50),
-        new Platform(2760, 670, 1280, 50), new Platform(2800, 420, 500, 50)
+        new Platform(780, 670, 650, 50), new Platform(1430, 670, 300, 50),
+        new Platform(1700, 450, 300, 50), new Platform(1980, 250, 300, 50),
+        new Platform(2280, 670, 750, 50), new Platform(2480, 450, 300, 50),
+        new Platform(3030, 670, 1578, 50), new Platform(3450, 420, 500, 50)
+    ]
+
+    diamonds = [new Diamond(100, 100), new Diamond(1000, 100), new Diamond(1450, 300),
+        new Diamond(1600, 200), new Diamond(1850, 100), new Diamond(2480, 100),
+        new Diamond(2580, 100), new Diamond(2680, 100)
     ]
 
     apples = [new Apple(1080, 620, 45, 50), new Apple(2350, 400, 45, 50),
@@ -620,10 +659,10 @@ function init(){    //функция инициализации (расстав�
     player = new Player(50, 400, 100, 150);
 
     enemies= [new Enemy(580, 200, 100, 150), new Enemy(1000, 400, 100, 150),
-        new Enemy(1880, 50, 100, 150), new Enemy(2400, 400, 100, 150), 
-        new Enemy(3000, 200, 100, 150), new Enemy(3400, 400, 100, 150)];
+        new Enemy(1800, 50, 100, 150), new Enemy(2600, 400, 100, 150), 
+        new Enemy(3700, 200, 100, 150), new Enemy(3800, 400, 100, 150)];
 
-    dragon = new Dragon(3540, 320, 480, 350);
+    dragon = new Dragon(4100, 320, 480, 350);
 
     score=0;
     c.fillStyle = 'white';
@@ -645,15 +684,20 @@ let keys = {    //объект для хранения состояния кла
 
 let fon1 = new Image(); 
 fon1.src = "images/photo_back.png"; //фон
+let backX = 0; //позиция фона
 
 function animate() {
     requestAnimationFrame(animate)  //функция сообщает браузеру о том, что необходимо вызвать анимацию, используя рекурсивный вызов функции
     c.clearRect(0, 0, canvas.width, canvas.height); //очищаем canvas, чтобы предотвратить появление остаточного изображения
     
-    c.drawImage(fon1, 0, 0); //отрисовка фона
+    c.drawImage(fon1, backX, 0); //отрисовка фона
 
     platforms.forEach((platform) => {
         platform.draw();
+    })
+
+    diamonds.forEach((diamond) => {
+        diamond.update()
     })
 
     enemies.forEach((enemy) => {
@@ -686,19 +730,28 @@ function animate() {
         }
     }
     
-
+    if (player.isGameOver){
+        player.velocity.x = 0;
+    }
+    
     if (!player.isGameOver){    //если не проиграл - игрок может двигаться
-        if (keys.right.pressed && player.position.x < 600) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
+        if (keys.right.pressed && player.position.x < 600) { //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
             player.velocity.x = 5;
         }
-        else if (keys.left.pressed && player.position.x > 50) {    //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
+        else if (keys.left.pressed && player.position.x > 50) { //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
             player.velocity.x = -5;
         }
-        else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение   
+        else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение
             player.velocity.x = 0;
-            if (keys.right.pressed && player.distance < 2750){
+            if (backX <= -fon1.width){ //если доходим до конца фона
+                backX = 0;
+            }
+            if (keys.right.pressed && player.distance < 3150){
                 platforms.forEach((platform) =>{
                     platform.position.x -= 5;
+                })
+                diamonds.forEach((diamond) => {
+                    diamond.position.x -=5;
                 })
                 apples.forEach((apple) =>{
                     apple.position.x -= 5;
@@ -710,13 +763,17 @@ function animate() {
                 })
                 dragon.position.x -= 5;
                 player.distance += 5;
+                backX -= 5;
             }
             else if (keys.left.pressed && player.position.x > 0){
                 player.velocity.x = -5;
             }
-            else if (keys.left.pressed && player.distance > 0 && player.distance != 2750){
+            else if (keys.left.pressed && player.distance > 0 && player.distance != 3150){
                 platforms.forEach((platform) =>{
                     platform.position.x += 5;
+                })
+                diamonds.forEach((diamond) => {
+                    diamond.position.x +=5;
                 })
                 apples.forEach((apple) =>{
                     apple.position.x += 5;
@@ -728,6 +785,7 @@ function animate() {
                 })
                 dragon.position.x += 5;
                 player.distance -= 5;
+                backX += 5;
             }
             else if (keys.right.pressed && (player.position.x + player.width) < canvas.width){
                 player.velocity.x = 5;
@@ -789,6 +847,7 @@ function animate() {
             c.fillStyle = `rgba(0, 0, 0, ${player.gameOverFrame * 0.03}`;
             c.fillRect(0, 0, canvas.width, canvas.height);
         }else{  // после 30 кадра появляется текст и кнопка
+            backX = 0;
             c.fillStyle = `rgba(0, 0, 0, 1`;
             c.fillRect(0, 0, canvas.width, canvas.height);
 
