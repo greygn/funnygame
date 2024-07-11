@@ -8,6 +8,10 @@ const dragonSprites = new Image();
 dragonSprites.src = "sprites/dragonSprites.png";
 let apple = new Image();
 apple.src = "images/apple.png"; //картинка яблока
+const bottleImg = new Image();
+bottleImg.src = "images/bottle.png"
+const menuImg = new Image();
+menuImg.src = "images/menuBackground.png"
 
 const  heart = new Image();   //сердце (здоровье игрока)
 heart.src = "images/heart.png";
@@ -18,11 +22,10 @@ diamondImg.src = "images/diamond.png";
 
 let arrayOfHearts = []; //массив, хранящий сердца игрока
 
-
 const gravity = 1;
 let score = 0; //счет убитых врагов
 let ballDistance=0; //дистанция полета шара
-
+let isMenu = true;
 
 class Player {   //объект игрока, хранит данные о нём
     constructor(x, y, width, height) {   //нужен для создания игрока с заданными свойствами
@@ -54,6 +57,9 @@ class Player {   //объект игрока, хранит данные о нё�
         this.jumped = false;  //флаг того, что игрок прыгнул
 
         this.distance = 0;
+
+        this.menuSpawned = false;
+        this.isWin = false;
 
         this.attackBox = { //поле атаки посохом
             position: this.position,
@@ -178,6 +184,31 @@ class Player {   //объект игрока, хранит данные о нё�
             this.isGameOver = true; //поднятие флага проигрыша, если игрок упал в яму и выпал за границы экрана
         }
 
+        if (this.position.x >= (bottle.position.x - 20) && this.position.x <= (bottle.position.x + bottle.width + 20) &&
+            this.position.y >= (bottle.position.y - 20) && this.position.y <= (bottle.position.y + bottle.height + 20) && !dragon.isAlive){
+                this.isWin = true;
+                canvas.addEventListener("click", function toMenu(e){   //слушатель, проверяет нажатие кнопки "на главный экран"
+                    let offsetX = e.offsetX;
+                    let offsetY = e.offsetY;
+                    if (offsetX >= 380 && offsetX <=730 && offsetY >= 480 && offsetY <= 600){
+                        player.isWin = false;
+                        backX = 0;
+                        isMenu = true;
+                        canvas.removeEventListener("click", toMenu);
+                        canvas.addEventListener("click", function startGame(e){   //слушатель, проверяет нажатие кнопки "начать игру"
+                            let offsetX = e.offsetX;
+                            let offsetY = e.offsetY;
+                            if (offsetX >= 380 && offsetX <=840 && offsetY >= 415 && offsetY <= 525){
+                                isMenu = false;
+                                backX = 0;
+                                init();
+                                canvas.removeEventListener("click", startGame)
+                            }
+                        })
+                    }
+                })
+        }
+
     }
     attack(){ //метод атаки посохом
         this.isAttacking = true;
@@ -193,6 +224,7 @@ class Player {   //объект игрока, хранит данные о нё�
         }, 100);
     }
 
+    
 }
 
 
@@ -625,6 +657,21 @@ class Apple{ //класс яблок
     }
 }
 
+class Bottle{
+    constructor(x, y) {
+        this.position = {
+            x: x,
+            y: y
+        }
+        this.width = 45;
+        this.height = 75;
+    }
+
+    draw() {
+        c.drawImage(bottleImg, this.position.x, this.position.y , this.width, this.height);
+    }
+}
+
 
 let apples = []; //массив яблок
 let platforms = [];
@@ -632,6 +679,7 @@ let player;
 let enemies = [];
 let diamonds = [];
 let dragon;
+let bottle;
 let plat1 = new Image();
 plat1.src = "images/37692.png"; //платформа для 1 уровня
 let plat2 = new Image();
@@ -652,9 +700,10 @@ function init(){    //функция инициализации (расстав�
         new Diamond(2580, 100), new Diamond(2680, 100)
     ]
 
-    apples = [new Apple(1080, 620, 45, 50), new Apple(2350, 400, 45, 50),
-        new Apple(3200, 370, 45, 50)];
+    apples = [new Apple(1080, 620, 45, 50), new Apple(2550, 400, 45, 50),
+        new Apple(3650, 370, 45, 50)];
     
+    bottle = new Bottle(4300, 520)
     player = 0;
     player = new Player(50, 400, 100, 150);
 
@@ -686,254 +735,394 @@ let fon1 = new Image();
 fon1.src = "images/photo_back.png"; //фон
 let backX = 0; //позиция фона
 
+let circleArray = []
+
+let colorArray = [
+    'rgba(255, 190, 11, 0.8)',
+    'rgba(251, 86, 7, 0.8)',
+    'rgba(255, 0, 110, 0.8)',
+    'rgba(131, 56, 236, 0.8)',
+    'rgba(58, 134, 255, 0.8)'
+]
+
+function Circle(x, y, dx, dy, radius, color){
+    this.x = x;
+    this.y = y;
+    this.dx = dx;
+    this.dy = dy;
+    this.radius = radius;
+    this.color = color;
+    this.firstX = false;
+    this.firstY = false;
+
+    this.draw = function() {
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        c.fillStyle = this.color;
+        c.fill();
+    }
+
+    this.update = function(){
+        if(this.x - this.radius > 0){
+            this.firstX = true;
+        }
+        if(this.x + this.radius < canvas.height){
+            this.firstY = true;
+        }
+        if ((this.x + this.radius > innerWidth || this.x - this.radius < -200) && this.firstX){
+            this.dx = -this.dx;
+        }
+        if ((this.y + this.radius > innerHeight || this.y - this.radius < -200) && this.firstY){
+            this.dy = -this.dy;
+        }
+
+        this.x += this.dx;
+        this.y += this.dy;
+
+        this.draw();
+    }
+}
+
+for (let i = 0; i < 40; i++){
+    let radius = Math.random() * 40 + 50;
+    let x = Math.random() * -200;
+    let y = canvas.height + Math.random() * 200;
+    let dx = Math.random() * 1;
+    let dy = Math.random() * -1;
+    let color = colorArray[Math.floor(Math.random() * (colorArray.length - 0.1))];
+    circleArray.push(new Circle(x, y, dx, dy, radius, color));
+}
+
 function animate() {
     requestAnimationFrame(animate)  //функция сообщает браузеру о том, что необходимо вызвать анимацию, используя рекурсивный вызов функции
     c.clearRect(0, 0, canvas.width, canvas.height); //очищаем canvas, чтобы предотвратить появление остаточного изображения
-    
-    c.drawImage(fon1, backX, 0); //отрисовка фона
 
-    platforms.forEach((platform) => {
-        platform.draw();
-    })
 
-    diamonds.forEach((diamond) => {
-        diamond.update()
-    })
-
-    enemies.forEach((enemy) => {
-        if (enemy.isAlive){
-            enemy.update();
+    if(isMenu){
+        if(!player.menuSpawned){
+            canvas.addEventListener("click", function startGame(e){   //слушатель, проверяет нажатие кнопки "начать игру"
+                let offsetX = e.offsetX;
+                let offsetY = e.offsetY;
+                if (offsetX >= 380 && offsetX <=840 && offsetY >= 415 && offsetY <= 525){
+                    isMenu = false;
+                    init();
+                    canvas.removeEventListener("click", startGame);
+                }
+            })
         }
-    })
+        c.drawImage(menuImg, 0, 0, canvas.width, canvas.height);
+        c.fillStyle = 'white';
+        c.font = "40px PressStart";
+        c.fillText("Побег из Страны Чудес", 211, 191, 860, 46);
 
-    if (dragon.isAlive){
-        dragon.update();
-    }
-    
-    player.update();
+        c.fillStyle = ("rgba(111, 45, 20, 0.8)");
+        c.beginPath();
+        c.roundRect(382, 415, 455, 110, 30);
+        c.fill();
+        c.closePath();
+        c.fillStyle = 'white';
+        c.font = "32px PressStart";
+        c.fillText("Начать игру", 433, 480, 354, 46);
 
-    for (let i = 0; i < 3; i++){ //визуальная отрисовка платформ 1 локации
-        c.drawImage(plat1, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
-    }
-    
-    for (let i = 3; i < 8; i++){ //визуальная отрисовка платформ 2 локации
-        c.drawImage(plat2, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
-    }
+        c.font = "24px SofiaSans";
+        c.fillText("Управление:", 13, 548, 354, 24);
+        c.fillText("W - прыжок", 13, 572, 354, 24);
+        c.fillText("A - движение влево", 13, 596, 354, 24);
+        c.fillText("D - движение вправо", 13, 620, 354, 24);
+        c.fillText("J - ближняя атака", 13, 644, 354, 24);
+        c.fillText("K - дальняя атака", 13, 668, 354, 24);
+        c.fillText("L - щит", 13, 692, 354, 24);
 
-    for (let i = 8; i < 10; i++){ //визуальная отрисовка платформ 2 локации
-        c.drawImage(plat3, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
-    }
+        c.drawImage(diamondImg, 887, 514, 78, 58);
+        c.fillText("Собирайте алмазы, чтобы", 971, 535, 354, 24);
+        c.fillText("увеличить счёт", 971, 559, 354, 24);
 
-    for( let i=0; i<apples.length; i++){ //отрисовка яблок
-        if(apples[i].have){
-            apples[i].draw();
+        c.drawImage(apple, 905, 571, 48, 60);
+        c.fillText("Яблоки восстанавливают", 971, 598, 354, 24);
+        c.fillText("здоровье", 971, 622, 354, 24);
+
+        c.drawImage(bottleImg, 911, 634, 40, 77);
+        c.fillText("Найдите зелье, чтобы ", 971, 664, 354, 24);
+        c.fillText("проснуться", 971, 688, 354, 24);
+    }
+    else if (!isMenu){
+        c.drawImage(fon1, backX, 0); //отрисовка фона
+
+        platforms.forEach((platform) => {
+            platform.draw();
+        })
+
+        diamonds.forEach((diamond) => {
+            diamond.update()
+        })
+
+        enemies.forEach((enemy) => {
+            if (enemy.isAlive){
+                enemy.update();
+            }
+        })
+
+        bottle.draw();
+
+        if (dragon.isAlive){
+            dragon.update();
         }
-    }
-    
-    if (player.isGameOver){
-        player.velocity.x = 0;
-    }
-    
-    if (!player.isGameOver){    //если не проиграл - игрок может двигаться
-        if (keys.right.pressed && player.position.x < 600) { //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
-            player.velocity.x = 5;
+        
+        player.update();
+
+        for (let i = 0; i < 3; i++){ //визуальная отрисовка платформ 1 локации
+            c.drawImage(plat1, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
         }
-        else if (keys.left.pressed && player.position.x > 50) { //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
-            player.velocity.x = -5;
+        
+        for (let i = 3; i < 8; i++){ //визуальная отрисовка платформ 2 локации
+            c.drawImage(plat2, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
         }
-        else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение
+
+        for (let i = 8; i < 10; i++){ //визуальная отрисовка платформ 2 локации
+            c.drawImage(plat3, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
+        }
+
+        for( let i=0; i<apples.length; i++){ //отрисовка яблок
+            if(apples[i].have){
+                apples[i].draw();
+            }
+        }
+        
+        if (player.isGameOver){
             player.velocity.x = 0;
-            if (backX <= -fon1.width){ //если доходим до конца фона
-                backX = 0;
-            }
-            if (keys.right.pressed && player.distance < 3150){
-                platforms.forEach((platform) =>{
-                    platform.position.x -= 5;
-                })
-                diamonds.forEach((diamond) => {
-                    diamond.position.x -=5;
-                })
-                apples.forEach((apple) =>{
-                    apple.position.x -= 5;
-                })
-                enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
-                    enemy.position.x -= 5;
-                    enemy.positionStartX -= 5;
-                    enemy.positionEndX -= 5;
-                })
-                dragon.position.x -= 5;
-                player.distance += 5;
-                backX -= 5;
-            }
-            else if (keys.left.pressed && player.position.x > 0){
-                player.velocity.x = -5;
-            }
-            else if (keys.left.pressed && player.distance > 0 && player.distance != 3150){
-                platforms.forEach((platform) =>{
-                    platform.position.x += 5;
-                })
-                diamonds.forEach((diamond) => {
-                    diamond.position.x +=5;
-                })
-                apples.forEach((apple) =>{
-                    apple.position.x += 5;
-                })
-                enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
-                    enemy.position.x += 5;
-                    enemy.positionStartX += 5;
-                    enemy.positionEndX += 5;
-                })
-                dragon.position.x += 5;
-                player.distance -= 5;
-                backX += 5;
-            }
-            else if (keys.right.pressed && (player.position.x + player.width) < canvas.width){
+        }
+        
+        if (!player.isGameOver && !player.isWin){    //если не проиграл - игрок может двигаться
+            if (keys.right.pressed && player.position.x < 600) { //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
                 player.velocity.x = 5;
             }
-        }
-    
-        platforms.forEach((platform) => {
-            if (player.position.y + player.height <= platform.position.y &&
-                player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
-                player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
-                player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
-                player.jumped = false;  //игрок может снова прыгнуть
+            else if (keys.left.pressed && player.position.x > 50) { //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
+                player.velocity.x = -5;
             }
-        })
-
-        apples.forEach((apple) => { //если координаты игрока совпали с координатами ябллока, + сердечко к здоровью игрока
-            if (player.position.x + player.width >= apple.position.x && player.position.x <= apple.position.x + apple.width &&
-                player.position.y + player.height >= apple.position.y && 
-                player.position.y <= apple.position.y + apple.height && apple.have){
-                if (player.countHv < 5){
-                    player.countHv++;
+            else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение
+                player.velocity.x = 0;
+                if (backX <= -fon1.width){ //если доходим до конца фона
+                    backX = 0;
                 }
-                apple.have = false; 
+                if (keys.right.pressed && player.distance < 3150){
+                    platforms.forEach((platform) =>{
+                        platform.position.x -= 5;
+                    })
+                    diamonds.forEach((diamond) => {
+                        diamond.position.x -=5;
+                    })
+                    apples.forEach((apple) =>{
+                        apple.position.x -= 5;
+                    })
+                    enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
+                        enemy.position.x -= 5;
+                        enemy.positionStartX -= 5;
+                        enemy.positionEndX -= 5;
+                    })
+                    dragon.position.x -= 5;
+                    player.distance += 5;
+                    backX -= 5;
+                    bottle.position.x -=5;
+                }
+                else if (keys.left.pressed && player.position.x > 0){
+                    player.velocity.x = -5;
+                }
+                else if (keys.left.pressed && player.distance > 0 && player.distance != 3150){
+                    platforms.forEach((platform) =>{
+                        platform.position.x += 5;
+                    })
+                    diamonds.forEach((diamond) => {
+                        diamond.position.x +=5;
+                    })
+                    apples.forEach((apple) =>{
+                        apple.position.x += 5;
+                    })
+                    enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
+                        enemy.position.x += 5;
+                        enemy.positionStartX += 5;
+                        enemy.positionEndX += 5;
+                    })
+                    dragon.position.x += 5;
+                    player.distance -= 5;
+                    backX += 5;
+                    bottle.position.x +=5;
+                }
+                else if (keys.right.pressed && (player.position.x + player.width) < canvas.width){
+                    player.velocity.x = 5;
+                }
             }
-        })
+        
+            platforms.forEach((platform) => {
+                if (player.position.y + player.height <= platform.position.y &&
+                    player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
+                    player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
+                    player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
+                    player.jumped = false;  //игрок может снова прыгнуть
+                }
+            })
 
-        //счет убитых врагов
-        c.fillStyle = 'white';
-        c.font = "20px PressStart";
-        c.fillText("СЧЕТ: ", 40, 55);
-        c.fillStyle = 'white';
-        c.font = "30px PressStart";
-        c.fillText(score, 140, 58);
-
-        //здоровье игрока
-        c.fillStyle = 'white';
-        c.font = "20px PressStart";
-        c.fillText("ЗДОРОВЬЕ: ", 800, 55);
-        for (let i = 0; i < player.countHv; i++) { 
-            arrayOfHearts[i] = heart;
-        }
-        for (let i = 0; i < player.countHv; i++) { 
-                arrayOfHearts[i].onload = function(n){
-                c.drawImage(arrayOfHearts[n], 980 + 50*n, 20 , 50, 50);
-            }(i);
-        }
-    }
-    else{   //анимация, появляющаяся при проигрыше
-        if (player.gameOverFrame < 30){ //первые 30 кадров рисуется только затемнение экрана
-            if (player.gameOverFrame == 0){
-                canvas.addEventListener("click", (e) => {   //слушатель, проверяет нажатие кнопки "попробовать снова"
-                    let offsetX = e.offsetX;
-                    let offsetY = e.offsetY;
-                    if (offsetX >= 400 && offsetX <=840 && offsetY >= 420 && offsetY <= 550){
-                        init();
+            apples.forEach((apple) => { //если координаты игрока совпали с координатами ябллока, + сердечко к здоровью игрока
+                if (player.position.x + player.width >= apple.position.x && player.position.x <= apple.position.x + apple.width &&
+                    player.position.y + player.height >= apple.position.y && 
+                    player.position.y <= apple.position.y + apple.height && apple.have){
+                    if (player.countHv < 5){
+                        player.countHv++;
                     }
-                })
+                    apple.have = false; 
+                }
+            })
+
+            //счет убитых врагов
+            c.fillStyle = 'white';
+            c.font = "20px PressStart";
+            c.fillText("СЧЕТ: ", 40, 55);
+            c.fillStyle = 'white';
+            c.font = "30px PressStart";
+            c.fillText(score, 140, 58);
+
+            //здоровье игрока
+            c.fillStyle = 'white';
+            c.font = "20px PressStart";
+            c.fillText("ЗДОРОВЬЕ: ", 800, 55);
+            for (let i = 0; i < player.countHv; i++) { 
+                arrayOfHearts[i] = heart;
             }
-            c.fillStyle = `rgba(0, 0, 0, ${player.gameOverFrame * 0.03}`;
+            for (let i = 0; i < player.countHv; i++) { 
+                    arrayOfHearts[i].onload = function(n){
+                    c.drawImage(arrayOfHearts[n], 980 + 50*n, 20 , 50, 50);
+                }(i);
+            }
+        }
+        else if (player.isGameOver && !player.isWin){   //анимация, появляющаяся при проигрыше
+            if (player.gameOverFrame < 30){ //первые 30 кадров рисуется только затемнение экрана
+                if (player.gameOverFrame == 0){
+                    canvas.addEventListener("click", function restart(e) {   //слушатель, проверяет нажатие кнопки "попробовать снова"
+                        let offsetX = e.offsetX;
+                        let offsetY = e.offsetY;
+                        if (offsetX >= 400 && offsetX <=840 && offsetY >= 420 && offsetY <= 550){
+                            init();
+                            canvas.removeEventListener("click", restart)
+                        }
+                    })
+                }
+                c.fillStyle = `rgba(0, 0, 0, ${player.gameOverFrame * 0.03}`;
+                c.fillRect(0, 0, canvas.width, canvas.height);
+            }else{  // после 30 кадра появляется текст и кнопка
+                backX = 0;
+                c.fillStyle = `rgba(0, 0, 0, 1`;
+                c.fillRect(0, 0, canvas.width, canvas.height);
+
+                c.fillStyle = 'white';
+                c.font = "40px PressStart";
+                c.fillText("Вы проиграли!", 350, 190);
+
+                c.fillStyle = ("rgb(72, 68, 78)");
+                c.beginPath();
+                c.roundRect(400, 420, 438, 127, 30);
+                c.fill();
+                c.closePath();
+
+                c.fillStyle = 'white';
+                c.font = "32px PressStart";
+                c.fillText("Попробовать", 438, 472, 359);
+                c.fillText("снова", 530, 522, 359);
+            }
+            player.gameOverFrame++;
+        }
+        else if(player.isWin){
+            c.fillStyle = "black"
             c.fillRect(0, 0, canvas.width, canvas.height);
-        }else{  // после 30 кадра появляется текст и кнопка
-            backX = 0;
-            c.fillStyle = `rgba(0, 0, 0, 1`;
-            c.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < circleArray.length; i++){
+                circleArray[i].update();
+            }
 
             c.fillStyle = 'white';
             c.font = "40px PressStart";
-            c.fillText("Вы проиграли!", 350, 190);
+            c.fillText("Вы победили!", 376, 189, 482, 46);
+            c.font = "32px PressStart";
+            c.fillText("спасибо за игру", 366, 242, 487, 46);
+            c.fillText(`ваш счет:${score}`, 399, 427, 450, 46);
 
             c.fillStyle = ("rgb(72, 68, 78)");
             c.beginPath();
-            c.roundRect(400, 420, 438, 127, 30);
+            c.roundRect(382, 480, 455, 110, 30);
             c.fill();
             c.closePath();
 
             c.fillStyle = 'white';
             c.font = "32px PressStart";
-            c.fillText("Попробовать", 438, 472, 359);
-            c.fillText("снова", 530, 522, 359);
+            c.fillText("На главный", 443, 533, 344, 46);
+            c.fillText("экран", 510, 572, 344, 46);
         }
-        player.gameOverFrame++;
-    }
 
 
-    platforms.forEach((platform) => {
-        if (player.position.y + player.height <= platform.position.y &&
-            player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
-            player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
-            player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
-        }
-        enemies.forEach((enemy) => {
-            if (enemy.position.y + enemy.height <= platform.position.y &&
-                enemy.position.y + enemy.height + enemy.velocity.y >= platform.position.y && //если враг находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
-                enemy.position.x + enemy.width >= platform.position.x && enemy.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
-                    enemy.velocity.y = 0;  //...то ускорение по оси Y обнуляется и вруг прекращает падать
+        platforms.forEach((platform) => {
+            if (player.position.y + player.height <= platform.position.y &&
+                player.position.y + player.height + player.velocity.y >= platform.position.y && //если игрок находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
+                player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
+                player.velocity.y = 0;  //...то ускорение по оси Y обнуляется и игрок прекращает падать
+            }
+            enemies.forEach((enemy) => {
+                if (enemy.position.y + enemy.height <= platform.position.y &&
+                    enemy.position.y + enemy.height + enemy.velocity.y >= platform.position.y && //если враг находится на платформе относительно оси Y(координата Y + высота игрока равна координаты платформы)...
+                    enemy.position.x + enemy.width >= platform.position.x && enemy.position.x <= platform.position.x + platform.width) {  //...и относительно оси X...
+                        enemy.velocity.y = 0;  //...то ускорение по оси Y обнуляется и вруг прекращает падать
+                    }
+            })
+        })
+        
+        enemies.forEach((enemy) =>  {
+            if( player.attackBox.position.y + player.attackBox.height >= enemy.position.y && 
+                player.attackBox.position.y <= enemy.position.y + enemy.height && 
+                player.isAttacking && enemy.isAlive){ //если враг ещё жив + игрок атакует посохом
+                    if (player.turnToAttack == "right" && player.attackBox.position.x + player.attackBox.width >= enemy.position.x && 
+                        player.attackBox.position.x <= enemy.position.x + enemy.width ) { //пока поле атаки хоть как-то касается врага и игрок повернут вправо
+                            player.isAttacking = false; //возвращаем значение false
+                            enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
+                            if (enemy.health <=0){  //если здоровье равно нулю
+                                enemy.isAlive = false;  //враг считается убитым
+                                score+=100; // +враг убит
+                            }
+                            
+                    }
+                    if (player.turnToAttack == "left" && player.attackBox.position.x >= enemy.position.x && 
+                        player.attackBox.position.x - player.attackBox.width <= enemy.position.x + enemy.width ) { //пока поле атаки хоть как-то касается врага и игрок повернут влево
+                            player.isAttacking = false; //возвращаем значение false
+                            enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
+                            if (enemy.health <=0){  //если здоровье равно нулю
+                                enemy.isAlive = false;  //враг считается убитым
+                                score+=100; // +враг убит
+                            }
+                            
+                    }
+                }
+            
+            if (player.ballBox.position.y + player.ballBox.radius >= enemy.position.y && 
+                player.ballBox.position.y <= enemy.position.y + enemy.height && 
+                player.isBallAttack && enemy.isAlive){ //если враг ещё жив + игрок атакует шарами
+                    if (player.turnToAttack == "right" && player.ballBox.position.x + player.width + 380 >= enemy.position.x && 
+                        player.ballBox.position.x + player.width <= enemy.position.x + enemy.width ){ //пока поле атаки хоть как-то касается врага и игрок повернут вправо
+                            player.isBallAttack = false; //возвращаем значение false
+                            enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
+                            if (enemy.health <=0){  //если здоровье равно нулю
+                                enemy.isAlive = false;  //враг считается убитым
+                                score+=100; // +враг убит
+                            }       
+                    }
+                    if (player.turnToAttack == "left" && player.ballBox.position.x >= enemy.position.x && 
+                        player.ballBox.position.x  - 380 <= enemy.position.x + enemy.width ){ //пока поле атаки хоть как-то касается врага и игрок повернут влево
+                            player.isBallAttack = false; //возвращаем значение false
+                            enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
+                            if (enemy.health <=0){  //если здоровье равно нулю
+                                enemy.isAlive = false;  //враг считается  убитым
+                                score+=100; // +враг убит
+                            }       
+                    }
                 }
         })
-    })
+        }
     
-    enemies.forEach((enemy) =>  {
-        if( player.attackBox.position.y + player.attackBox.height >= enemy.position.y && 
-            player.attackBox.position.y <= enemy.position.y + enemy.height && 
-            player.isAttacking && enemy.isAlive){ //если враг ещё жив + игрок атакует посохом
-                if (player.turnToAttack == "right" && player.attackBox.position.x + player.attackBox.width >= enemy.position.x && 
-                    player.attackBox.position.x <= enemy.position.x + enemy.width ) { //пока поле атаки хоть как-то касается врага и игрок повернут вправо
-                        player.isAttacking = false; //возвращаем значение false
-                        enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
-                        if (enemy.health <=0){  //если здоровье равно нулю
-                            enemy.isAlive = false;  //враг считается убитым
-                            score+=100; // +враг убит
-                        }
-                          
-                }
-                if (player.turnToAttack == "left" && player.attackBox.position.x >= enemy.position.x && 
-                    player.attackBox.position.x - player.attackBox.width <= enemy.position.x + enemy.width ) { //пока поле атаки хоть как-то касается врага и игрок повернут влево
-                        player.isAttacking = false; //возвращаем значение false
-                        enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
-                        if (enemy.health <=0){  //если здоровье равно нулю
-                            enemy.isAlive = false;  //враг считается убитым
-                            score+=100; // +враг убит
-                        }
-                          
-                }
-            }
-        
-        if (player.ballBox.position.y + player.ballBox.radius >= enemy.position.y && 
-            player.ballBox.position.y <= enemy.position.y + enemy.height && 
-            player.isBallAttack && enemy.isAlive){ //если враг ещё жив + игрок атакует шарами
-                if (player.turnToAttack == "right" && player.ballBox.position.x + player.width + 380 >= enemy.position.x && 
-                    player.ballBox.position.x + player.width <= enemy.position.x + enemy.width ){ //пока поле атаки хоть как-то касается врага и игрок повернут вправо
-                        player.isBallAttack = false; //возвращаем значение false
-                        enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
-                        if (enemy.health <=0){  //если здоровье равно нулю
-                            enemy.isAlive = false;  //враг считается убитым
-                            score+=100; // +враг убит
-                        }       
-                }
-                if (player.turnToAttack == "left" && player.ballBox.position.x >= enemy.position.x && 
-                    player.ballBox.position.x  - 380 <= enemy.position.x + enemy.width ){ //пока поле атаки хоть как-то касается врага и игрок повернут влево
-                        player.isBallAttack = false; //возвращаем значение false
-                        enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
-                        if (enemy.health <=0){  //если здоровье равно нулю
-                            enemy.isAlive = false;  //враг считается  убитым
-                            score+=100; // +враг убит
-                        }       
-                }
-            }
-    })
         
 }
 
