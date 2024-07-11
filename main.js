@@ -862,18 +862,18 @@ addEventListener('keydown', ({ code }) => {   //обработчик событ�
                 }
                 
                 break;
-            case 'KeyQ':
+            case 'KeyJ':
                 player.attack();
                 player.currentState = "attack";
                 player.attackAnim = true;
             break;
-            case 'KeyE':
+            case 'KeyK':
                 player.magic();
                 player.currentState = "attack"
                 player.attackAnim = true;
                 ballDistance=0;
             break;
-            case 'KeyR':
+            case 'KeyL':
                 player.protection = true;
             break;
         }
@@ -888,7 +888,7 @@ addEventListener('keyup', ({ code }) => { //обработчик события 
         case 'KeyD':
             keys.right.pressed = false;
             break;
-            case 'KeyR':
+            case 'KeyL':
                 player.protection = false;
             break;
     }
