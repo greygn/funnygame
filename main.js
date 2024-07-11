@@ -11,6 +11,8 @@ const  heart = new Image();   //сердце (здоровье игрока)
 heart.src = "images/heart.png";
 const flameImg = new Image();
 flameImg.src = "images/flameTexture.JPG";
+const diamondImg = new Image();
+diamondImg.src = "images/diamond.png";
 
 let arrayOfHearts = []; //массив, хранящий сердца игрока
 
@@ -574,9 +576,41 @@ class Platform {    //класс платформы
     }
 }
 
+class Diamond {
+    constructor(x, y){
+        this.position = {
+            x: x,
+            y: y
+        }
+
+        this.width = 100;
+        this.height = 75;
+
+        this.isCollected = false;   //флаг того, что алмазы собраны
+    }
+
+    draw(){ //отрисовка алмазов
+        if (!this.isCollected){
+            c.drawImage(diamondImg, this.position.x, this.position.y, this.width, this.height)
+        }
+        
+    }
+
+    update(){
+        if (player.position.x >= (this.position.x - 20) && player.position.x <= (this.position.x + this.width + 20) &&
+            player.position.y >= (this.position.y - 20) && player.position.y <= (this.position.y + this.height + 20) && !this.isCollected){
+                this.isCollected = true;    //отмечаем то, что они собраны
+                score += 50;
+            }
+            
+        this.draw();
+    }
+}
+
 let platforms = [];
 let player;
 let enemies = [];
+let diamonds = [];
 let dragon;
 let plat1 = new Image();
 plat1.src = "images/37692.png"; //платформа для 1 уровня
@@ -592,6 +626,8 @@ function init(){    //функция инициализации (расстав�
         new Platform(2080, 670, 680, 50), new Platform(2300, 450, 300, 50),
         new Platform(2760, 670, 1280, 50), new Platform(2800, 420, 500, 50)
     ]
+
+    diamonds = [new Diamond(100, 100), new Diamond(1000, 100), new Diamond(1250, 300)]
     
     player = 0;
     player = new Player(50, 400, 100, 150);
@@ -633,6 +669,10 @@ function animate() {
         platform.draw();
     })
 
+    diamonds.forEach((diamond) => {
+        diamond.update()
+    })
+
     enemies.forEach((enemy) => {
         if (enemy.isAlive){
             enemy.update();
@@ -671,6 +711,10 @@ function animate() {
                 platforms.forEach((platform) =>{
                     platform.position.x -= 5;
                 })
+
+                diamonds.forEach((diamond) => {
+                    diamond.position.x -=5;
+                })
                 enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
                     enemy.position.x -= 5;
                     enemy.positionStartX -= 5;
@@ -685,6 +729,10 @@ function animate() {
             else if (keys.left.pressed && player.distance > 0 && player.distance != 2750){
                 platforms.forEach((platform) =>{
                     platform.position.x += 5;
+                })
+
+                diamonds.forEach((diamond) => {
+                    diamond.position.x +=5;
                 })
                 enemies.forEach((enemy) =>{ //сдвигаем врага, а также его путевые точки
                     enemy.position.x += 5;
