@@ -4,8 +4,14 @@ const aliceSprites = new Image();   //картинка спрайта Алисы
 aliceSprites.src = "sprites/aliceSprites.png"
 const enemySprites = new Image();   //картинка спрайта врага
 enemySprites.src = "sprites/enemySprites.png"
+const dragonSprites = new Image();
+dragonSprites.src = "sprites/dragonSprites.png"
+
 const  heart = new Image();   //сердце (здоровье игрока)
 heart.src = "images/heart.png";
+const flameImg = new Image();
+flameImg.src = "images/flameTexture.JPG";
+
 let arrayOfHearts = []; //массив, хранящий сердца игрока
 
 
@@ -280,10 +286,10 @@ class Enemy {   //объект врага, хранит данные о нём
 
         //ЗДОРОВЬЕ ВРАГА (линия)
         c.fillStyle='yellow';
-        c.fillRect(this.position.x, this.position.y - 25, this.width, 10);
+        c.fillRect(this.position.x, this.position.y - 10, this.width, 10);
 
         c.fillStyle='brown';
-        c.fillRect(this.position.x, this.position.y - 25, this.width * this.health / 90, 10);
+        c.fillRect(this.position.x, this.position.y - 10, this.width * this.health / 90, 10);
 
     }
 
@@ -321,7 +327,9 @@ class Enemy {   //объект врага, хранит данные о нём
         else{  //Если врага встревожили, то он начинает следовать за игроком
             if(this.position.x < player.position.x){ //Если игрок справа, то враг идёт направо
                 this.velocity.x = 1.5; //Ускорение перемещения врага
-                this.isRight = true;
+                if (this.position.y == player.position.y){
+                    this.isRight = true;
+                }
 
                 if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0  && this.attackBox.position.y == player.position.y){
                     this.attackCoolDown = 120; //Задержка перед ударом
@@ -334,7 +342,11 @@ class Enemy {   //объект врага, хранит данные о нём
 
             else if(this.position.x > player.position.x){// Если игрок слева, то идёт налево
                 this.velocity.x = -1.5; //Ускорение перемещения врага
-                this.isRight = false;
+
+                if (this.position.y == player.position.y){
+                    this.isRight = false;
+                }
+                
                 
                 if(Math.abs(this.position.x - player.position.x) < 100 && this.attackCoolDown == 0 && this.attackBox.position.y == player.position.y){
                     this.attackCoolDown = 120; //Задержка перед ударом
@@ -354,7 +366,7 @@ class Enemy {   //объект врага, хранит данные о нём
         if((this.position.y - 40) >= canvas.height){ //Если враг упал в пропасть, то он умирает
             this.health = 0;
             this.isAlive = false;
-            score++;
+            score+=50;
         }
 
         if(this.attackCoolDown > 0){ //Таймер для атаки
@@ -367,12 +379,182 @@ class Enemy {   //объект врага, хранит данные о нём
         if (this.position.y + this.height + this.velocity.y < canvas.height) {
             this.velocity.y += gravity;
         }
-        // else {
-        //     this.velocity.y = 0;
-        // }
     }
 }
 
+class Dragon {
+    constructor(x, y, width, height) {   //нужен для создания врага с заданными свойствами
+        this.position = {
+            x: x,
+            y: y,
+        }
+        
+
+        this.attackZone = { //поле атаки
+            x: 50,
+            y: 200,
+            width: 1100,
+            height: 220
+        }
+
+        this.attackCoolDown = 180;
+
+        this.alert = false; // Флаг встревоженного врага
+
+        this.width = width,
+        this.height = height,
+        this.health = 300, //здоровье врага
+
+        this.isAlive = true //флаг жизни врага
+
+        this.currentState = "stand" //очень много флагов состояния врага для анимации
+        this.lastState = "stand",
+        this.animationTick = 0, //тик анимации (счётчик кадров)
+        this.animationStage = 0,    //стадия анимации (картинки анимации)
+        this.attackAnim = false,
+
+        this.attackTop = true
+    }
+
+    draw(){
+
+        if (this.animationTick == 10){  //считаем кадры анимации
+            this.animationTick = 0;
+            this.animationStage++;  //переключаем картинки
+            if (this.animationStage == 6){
+                if (this.attackAnim){
+                    this.attackAnim = false
+                    
+                }
+                this.animationStage = 0;
+                this.currentState = "stand";
+            }
+        }
+        this.animationTick++;
+
+        if (this.currentState != this.lastState){   //смена состояния 
+            if(this.attackAnim){
+                this.currentState = "attack";   //при этом анимация атаки не должна прерываться
+            }
+            
+        }
+
+        if (this.alert){
+            //ЗДОРОВЬЕ ВРАГА (линия)
+            c.fillStyle='yellow';
+            c.fillRect(290, 100, 700, 50);
+
+            c.fillStyle='brown';
+            c.fillRect(290, 100, 700 * this.health / 300, 50);
+
+            if (this.attackCoolDown <=60){
+                c.fillStyle = "rgba(255, 0, 0, 0.4)";   //рисуем предупреждение
+                c.fillRect( this.attackZone.x, this.attackZone.y, this.attackZone.width, this.attackZone.height);
+            }
+            if (this.attackCoolDown <=15){  //рисуем огонь
+                c.drawImage(flameImg, 0, 0, this.attackZone.width, this.attackZone.height, this.attackZone.x, this.attackZone.y, this.attackZone.width, this.attackZone.height)
+            }
+        }
+
+        switch (this.currentState){
+            case "stand":   //анимация стойки
+                c.drawImage(dragonSprites, 480 * this.animationStage, 350, 480, 350, this.position.x, this.position.y, 480, 450);
+                break;
+            case "attack":  //анимация атаки
+                c.drawImage(dragonSprites, 480 * this.animationStage, 0, 480, 350, this.position.x, this.position.y, 480, 350);
+                break;
+        }
+
+    }
+
+    update(){
+        this.draw();
+
+        if (!this.alert){
+            if (this.position.x - player.position.x < 400){ //если игрок приблизился - переходим в состояние сражения
+                this.alert = true;
+            }
+        }
+        else{
+            if( player.attackBox.position.y + player.attackBox.height >= this.position.y && 
+                player.attackBox.position.y <= this.position.y + this.height && 
+                player.isAttacking && this.isAlive){ //если враг ещё жив + игрок атакует посохом
+                    if (player.turnToAttack == "right" && player.attackBox.position.x + player.attackBox.width >= this.position.x && 
+                        player.attackBox.position.x <= this.position.x + this.width ) { //пока поле атаки хоть как-то касается врага и игрок повернут вправо
+                            player.isAttacking = false; //возвращаем значение false
+                            this.health-=30; //здоровье врага уменьшается при каждом ударе на 30
+                            if (this.health <=0){  //если здоровье равно нулю
+                                this.isAlive = false;  //враг считается убитым
+                                score+= 500; // +враг убит
+                            }
+                              
+                    }
+                    if (player.turnToAttack == "left" && player.attackBox.position.x >= this.position.x && 
+                        player.attackBox.position.x - player.attackBox.width <= this.position.x + this.width ) { //пока поле атаки хоть как-то касается врага и игрок повернут влево
+                            player.isAttacking = false; //возвращаем значение false
+                            this.health-=30; //здоровье врага уменьшается при каждом ударе на 30
+                            if (this.health <=0){  //если здоровье равно нулю
+                                this.isAlive = false;  //враг считается убитым
+                                score+=500; // +враг убит
+                            }
+                              
+                    }
+                }
+            
+            if (player.ballBox.position.y + player.ballBox.radius >= this.position.y && 
+                player.ballBox.position.y <= this.position.y + this.height && 
+                player.isBallAttack && this.isAlive){ //если враг ещё жив + игрок атакует шарами
+                    if (player.turnToAttack == "right" && player.ballBox.position.x + player.width + 380 >= this.position.x && 
+                        player.ballBox.position.x + player.width <= this.position.x + this.width ){ //пока поле атаки хоть как-то касается врага и игрок повернут вправо
+                            player.isBallAttack = false; //возвращаем значение false
+                            this.health-=18; //здоровье врага уменьшается при каждом ударе на 18
+                            if (this.health <=0){  //если здоровье равно нулю
+                                this.isAlive = false;  //враг считается убитым
+                                score+=500; // +враг убит
+                            }       
+                    }
+                    if (player.turnToAttack == "left" && player.ballBox.position.x >= this.position.x && 
+                        player.ballBox.position.x  - 380 <= this.position.x + this.width ){ //пока поле атаки хоть как-то касается врага и игрок повернут влево
+                            player.isBallAttack = false; //возвращаем значение false
+                            this.health-=18; //здоровье врага уменьшается при каждом ударе на 18
+                            if (this.health <=0){  //если здоровье равно нулю
+                                this.isAlive = false;  //враг считается  убитым
+                                score+=500; // +враг убит
+                            }       
+                    }
+                }
+
+            if(this.attackCoolDown == 50){  //запускаем анимацию атаки
+                this.currentState = "attack";
+                this.animationStage = 0;
+                this.animationTick = 0;
+            }
+                
+            if(this.attackCoolDown == 0){
+                this.attackCoolDown = 180; //Задержка перед ударом
+                if(!player.isGameOver && (this.attackZone.x + this.attackZone.width) >= player.position.x && this.attackZone.x < player.position.x && 
+                (this.attackZone.y + this.attackZone.height) >= player.position.y && this.attackZone.y <= player.position.y && !player.protection){
+                    player.countHv--;   //снижаем здоровье игрока, если он оказался в огне 
+                }
+
+                //выбираем, где будет следующая атака
+                if (Math.random() <= 0.5){  //атака будет сверху
+                    this.attackTop = true;
+                    this.attackZone.x = 50;
+                    this.attackZone.y = 200;
+                }
+                else{
+                    this.attackTop = false; //атака будет снизу
+                    this.attackZone.x = 50;
+                    this.attackZone.y = 470;
+                }
+            }
+            else{
+                this.attackCoolDown--;
+            }
+        }
+    }
+}
 
 class Platform {    //класс платформы
     constructor(x, y, width, height) {
@@ -395,6 +577,7 @@ class Platform {    //класс платформы
 let platforms = [];
 let player;
 let enemies = [];
+let dragon;
 let plat1 = new Image();
 plat1.src = "images/37692.png"; //платформа для 1 уровня
 let plat2 = new Image();
@@ -407,13 +590,17 @@ function init(){    //функция инициализации (расстав�
         new Platform(780, 670, 500, 50), new Platform(1280, 670, 300, 50),
         new Platform(1530, 450, 300, 50), new Platform(1780, 250, 300, 50),
         new Platform(2080, 670, 680, 50), new Platform(2300, 450, 300, 50),
-        new Platform(2760, 670, 1280, 50), new Platform(3060, 420, 500, 50)
+        new Platform(2760, 670, 1280, 50), new Platform(2800, 420, 500, 50)
     ]
     
     player = 0;
     player = new Player(50, 400, 100, 150);
 
-    enemies= [new Enemy(580, 200, 100, 150)];
+    enemies= [new Enemy(580, 200, 100, 150), new Enemy(1000, 400, 100, 150),
+        new Enemy(1880, 50, 100, 150), new Enemy(2400, 400, 100, 150), 
+        new Enemy(3000, 200, 100, 150), new Enemy(3400, 400, 100, 150)];
+
+    dragon = new Dragon(3540, 320, 480, 350);
 
     score=0;
     c.fillStyle = 'white';
@@ -446,13 +633,18 @@ function animate() {
         platform.draw();
     })
 
-    player.update();
     enemies.forEach((enemy) => {
         if (enemy.isAlive){
             enemy.update();
         }
     })
+
+    if (dragon.isAlive){
+        dragon.update();
+    }
     
+    player.update();
+
     for (let i = 0; i < 3; i++){ //визуальная отрисовка платформ 1 локации
         c.drawImage(plat1, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
     }
@@ -484,12 +676,13 @@ function animate() {
                     enemy.positionStartX -= 5;
                     enemy.positionEndX -= 5;
                 })
+                dragon.position.x -= 5;
                 player.distance += 5;
             }
             else if (keys.left.pressed && player.position.x > 0){
                 player.velocity.x = -5;
             }
-            else if (keys.left.pressed && player.distance > 0){
+            else if (keys.left.pressed && player.distance > 0 && player.distance != 2750){
                 platforms.forEach((platform) =>{
                     platform.position.x += 5;
                 })
@@ -498,6 +691,7 @@ function animate() {
                     enemy.positionStartX += 5;
                     enemy.positionEndX += 5;
                 })
+                dragon.position.x += 5;
                 player.distance -= 5;
             }
             else if (keys.right.pressed && (player.position.x + player.width) < canvas.width){
@@ -596,7 +790,7 @@ function animate() {
                         enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
                         if (enemy.health <=0){  //если здоровье равно нулю
                             enemy.isAlive = false;  //враг считается убитым
-                            score++; // +враг убит
+                            score+=100; // +враг убит
                         }
                           
                 }
@@ -606,7 +800,7 @@ function animate() {
                         enemy.health-=30; //здоровье врага уменьшается при каждом ударе на 30
                         if (enemy.health <=0){  //если здоровье равно нулю
                             enemy.isAlive = false;  //враг считается убитым
-                            score++; // +враг убит
+                            score+=100; // +враг убит
                         }
                           
                 }
@@ -621,7 +815,7 @@ function animate() {
                         enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
                         if (enemy.health <=0){  //если здоровье равно нулю
                             enemy.isAlive = false;  //враг считается убитым
-                            score++; // +враг убит
+                            score+=100; // +враг убит
                         }       
                 }
                 if (player.turnToAttack == "left" && player.ballBox.position.x >= enemy.position.x && 
@@ -630,7 +824,7 @@ function animate() {
                         enemy.health-=18; //здоровье врага уменьшается при каждом ударе на 18
                         if (enemy.health <=0){  //если здоровье равно нулю
                             enemy.isAlive = false;  //враг считается  убитым
-                            score++; // +враг убит
+                            score+=100; // +враг убит
                         }       
                 }
             }
