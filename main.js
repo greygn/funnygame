@@ -627,16 +627,19 @@ function init(){    //функция инициализации (расстав�
         new Platform(3030, 670, 1578, 50), new Platform(3450, 420, 500, 50)
     ]
 
-    diamonds = [new Diamond(100, 100), new Diamond(1000, 100), new Diamond(1250, 300)]
+    diamonds = [new Diamond(100, 100), new Diamond(1000, 100), new Diamond(1450, 300),
+        new Diamond(1600, 200), new Diamond(1850, 100), new Diamond(2480, 100),
+        new Diamond(2580, 100), new Diamond(2680, 100)
+    ]
     
     player = 0;
     player = new Player(50, 400, 100, 150);
 
     enemies= [new Enemy(580, 200, 100, 150), new Enemy(1000, 400, 100, 150),
-        new Enemy(1880, 50, 100, 150), new Enemy(2400, 400, 100, 150), 
-        new Enemy(3000, 200, 100, 150), new Enemy(3400, 400, 100, 150)];
+        new Enemy(1800, 50, 100, 150), new Enemy(2600, 400, 100, 150), 
+        new Enemy(3700, 200, 100, 150), new Enemy(3800, 400, 100, 150)];
 
-    dragon = new Dragon(3540, 320, 480, 350);
+    dragon = new Dragon(4100, 320, 480, 350);
 
     score=0;
     c.fillStyle = 'white';
@@ -698,7 +701,10 @@ function animate() {
         c.drawImage(plat3, platforms[i].position.x, platforms[i].position.y - 30, platforms[i].width, platforms[i].height + 30);
     }
     
-
+    if (player.isGameOver){
+        player.velocity.x = 0;
+    }
+    
     if (!player.isGameOver){    //если не проиграл - игрок может двигаться
         if (keys.right.pressed && player.position.x < 600) { //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
             player.velocity.x = 5;
@@ -711,7 +717,7 @@ function animate() {
             if (backX <= -fon1.width){ //если доходим до конца фона
                 backX = 0;
             }
-            if (keys.right.pressed && player.distance < 2750){
+            if (keys.right.pressed && player.distance < 3150){
                 platforms.forEach((platform) =>{
                     platform.position.x -= 5;
                 })
@@ -731,7 +737,7 @@ function animate() {
             else if (keys.left.pressed && player.position.x > 0){
                 player.velocity.x = -5;
             }
-            else if (keys.left.pressed && player.distance > 0 && player.distance != 2750){
+            else if (keys.left.pressed && player.distance > 0 && player.distance != 3150){
                 platforms.forEach((platform) =>{
                     platform.position.x += 5;
                 })
@@ -784,7 +790,6 @@ function animate() {
         }
     }
     else{   //анимация, появляющаяся при проигрыше
-        backX = 0;
         if (player.gameOverFrame < 30){ //первые 30 кадров рисуется только затемнение экрана
             if (player.gameOverFrame == 0){
                 canvas.addEventListener("click", (e) => {   //слушатель, проверяет нажатие кнопки "попробовать снова"
@@ -798,6 +803,7 @@ function animate() {
             c.fillStyle = `rgba(0, 0, 0, ${player.gameOverFrame * 0.03}`;
             c.fillRect(0, 0, canvas.width, canvas.height);
         }else{  // после 30 кадра появляется текст и кнопка
+            backX = 0;
             c.fillStyle = `rgba(0, 0, 0, 1`;
             c.fillRect(0, 0, canvas.width, canvas.height);
 
