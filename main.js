@@ -621,10 +621,10 @@ plat3.src = "images/37694.png"; //платформа для 3 уровня
 
 function init(){    //функция инициализации (расставляет все объекты)
     platforms = [new Platform(350, 420, 500, 50), new Platform(0, 670, 420, 50),
-        new Platform(780, 670, 500, 50), new Platform(1280, 670, 300, 50),
-        new Platform(1530, 450, 300, 50), new Platform(1780, 250, 300, 50),
-        new Platform(2080, 670, 680, 50), new Platform(2300, 450, 300, 50),
-        new Platform(2760, 670, 1280, 50), new Platform(2800, 420, 500, 50)
+        new Platform(780, 670, 650, 50), new Platform(1430, 670, 300, 50),
+        new Platform(1700, 450, 300, 50), new Platform(1980, 250, 300, 50),
+        new Platform(2280, 670, 750, 50), new Platform(2480, 450, 300, 50),
+        new Platform(3030, 670, 1578, 50), new Platform(3450, 420, 500, 50)
     ]
 
     diamonds = [new Diamond(100, 100), new Diamond(1000, 100), new Diamond(1250, 300)]
@@ -658,12 +658,13 @@ let keys = {    //объект для хранения состояния кла
 
 let fon1 = new Image(); 
 fon1.src = "images/photo_back.png"; //фон
+let backX = 0; //позиция фона
 
 function animate() {
     requestAnimationFrame(animate)  //функция сообщает браузеру о том, что необходимо вызвать анимацию, используя рекурсивный вызов функции
     c.clearRect(0, 0, canvas.width, canvas.height); //очищаем canvas, чтобы предотвратить появление остаточного изображения
     
-    c.drawImage(fon1, 0, 0); //отрисовка фона
+    c.drawImage(fon1, backX, 0); //отрисовка фона
 
     platforms.forEach((platform) => {
         platform.draw();
@@ -699,14 +700,17 @@ function animate() {
     
 
     if (!player.isGameOver){    //если не проиграл - игрок может двигаться
-        if (keys.right.pressed && player.position.x < 600) {    //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
+        if (keys.right.pressed && player.position.x < 600) { //если нажата кнопка "вправо" - двигаемся вправо с помощью горищонтального ускорения
             player.velocity.x = 5;
         }
-        else if (keys.left.pressed && player.position.x > 50) {    //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
+        else if (keys.left.pressed && player.position.x > 50) { //если нажата кнопка "влево" - двигаемся влево с помощью отрицательного горищонтального ускорения
             player.velocity.x = -5;
         }
-        else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение   
+        else {   //если ни "вправо", ни "влево" не нажаты - обнуляем горизонтальное ускорение
             player.velocity.x = 0;
+            if (backX <= -fon1.width){ //если доходим до конца фона
+                backX = 0;
+            }
             if (keys.right.pressed && player.distance < 2750){
                 platforms.forEach((platform) =>{
                     platform.position.x -= 5;
@@ -722,6 +726,7 @@ function animate() {
                 })
                 dragon.position.x -= 5;
                 player.distance += 5;
+                backX -= 5;
             }
             else if (keys.left.pressed && player.position.x > 0){
                 player.velocity.x = -5;
@@ -741,6 +746,7 @@ function animate() {
                 })
                 dragon.position.x += 5;
                 player.distance -= 5;
+                backX += 5;
             }
             else if (keys.right.pressed && (player.position.x + player.width) < canvas.width){
                 player.velocity.x = 5;
@@ -778,6 +784,7 @@ function animate() {
         }
     }
     else{   //анимация, появляющаяся при проигрыше
+        backX = 0;
         if (player.gameOverFrame < 30){ //первые 30 кадров рисуется только затемнение экрана
             if (player.gameOverFrame == 0){
                 canvas.addEventListener("click", (e) => {   //слушатель, проверяет нажатие кнопки "попробовать снова"
