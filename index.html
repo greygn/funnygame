@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,53 +11,27 @@
             overflow-y: hidden;
             display: flex;
             justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url(images/background_image.jpg);
+            background-size: cover;
+            backdrop-filter: blur(3px);
         }
-
         canvas{
             border: 2px solid black;
-            background-image: url(images/photo_2024-06-27_20-39-02.jpg);
-            background-size: cover;
         }
-        #mainBlock{
-            position: relative;
-            display: inline-block;
+        @font-face {
+            font-family: "PressStart";
+            src: url("fonts/PressStart2P-Regular.ttf");
         }
-        #block{
-            position: absolute;
-            display: flex;
-            align-items: center;
-            width:1280px;
-            height: 90px;
-            padding: 0 0 0 5%;
-            box-sizing: border-box;
-        }
-        .table{
-            display: flex;
-            align-items: center;
-            color: brown;
-            width: 200px;
-        }
-        #lineScore{
-            background-color: yellow;
-            width: 50px;
-            height: 50px;
-            font-size: 40px;
-            text-align: center;
+        @font-face {
+            font-family: "SofiaSans";
+            src: url("fonts/SofiaSans-VariableFont_wght.ttf");
         }
     </style>
 </head>
 <body>
-    <div id="mainBlock">
-        <div id="block">
-            <div class="table">
-                <div>SCORE:</div>
-                <div id="lineScore"></div>
-            </div>
-        </div>
-        <canvas width="1280px" height="720px">ваш браузер не поддерживает canvas</canvas>
-    </div>
-    
+    <canvas width="1280px" height="720px">ваш браузер не поддерживает canvas</canvas>
     <script src="main.js"></script>
-
 </body>
 </html>
