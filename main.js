@@ -20,6 +20,9 @@ flameImg.src = "images/flameTexture.JPG";
 const diamondImg = new Image();
 diamondImg.src = "images/diamond.png";
 
+//test
+const o = 0;
+
 let arrayOfHearts = []; //массив, хранящий сердца игрока
 
 const gravity = 1;
